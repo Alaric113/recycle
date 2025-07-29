@@ -580,12 +580,14 @@ const AdminPanel = ({ items, setItems, onGoToGame, db, appId }) => {
         // 更新現有文件
         await setDoc(doc(db, itemsCollectionRef.path, currentItem.id), {
           emoji: currentItem.emoji,
+          name: currentItem.name,
           type: currentItem.type,
         }, { merge: true }); // 使用 merge: true 以免覆蓋其他欄位
       } else {
         // 新增文件，Firestore 會自動生成 ID
         await addDoc(itemsCollectionRef, {
           emoji: currentItem.emoji,
+          name: currentItem.name,
           type: currentItem.type,
         });
       }
