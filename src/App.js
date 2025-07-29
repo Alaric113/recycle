@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, onSnapshot, doc, setDoc, addDoc, deleteDoc, getDocs } from 'firebase/firestore';
+
+// 引入自定義 CSS，其中包含拖曳時的固定定位和陰影等樣式
+import './index.css';
 
 // --- 預設遊戲設定 ---
 const TRASH_TYPES = {
@@ -32,7 +35,7 @@ const DEFAULT_TRASH_ITEMS = [
 
 // Define default emojis for bins based on TRASH_TYPES for cleaner bin rendering
 const BIN_EMOJIS = {
-  [TRASH_TYPES.PAPER]: '�',
+  [TRASH_TYPES.PAPER]: '🧻', // Changed from '' to a more fitting emoji
   [TRASH_TYPES.PAPER_CONTAINER]: '📦',
   [TRASH_TYPES.PLASTIC]: '🧴',
   [TRASH_TYPES.GLASS]: '🍾',
@@ -122,7 +125,7 @@ const Scoreboard = ({ score, itemsLeft }) => (
  */
 const StartScreen = ({ onStart, onGoToAdmin, userId }) => (
   <div className="flex flex-col items-center justify-center h-full text-center p-4">
-    <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">資源回收王</h1>
+    <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">資源回收小遊戲</h1>
     <p className="text-xl md:text-2xl text-white mb-8 drop-shadow">將平台上的垃圾拖到正確的回收桶進行分類！</p>
     <button
       onClick={onStart}
@@ -167,14 +170,22 @@ const RoundCompleteScreen = ({ score, onRestart }) => (
  * 平台上的垃圾項目組件 (可拖曳)
  * @param {object} props - 組件屬性
  * @param {object} props.item - 垃圾項目物件 { type, emoji, id }
- * @param {function} props.onDragStart - 拖曳開始時的回調函數
+ * @param {function} props.onDragStart - 拖曳開始時的回調函數 (桌面)
+ * @param {function} props.onTouchStart - 觸摸開始時的回調函數 (行動裝置)
+ * @param {function} props.onTouchMove - 觸摸移動時的回調函數 (行動裝置)
+ * @param {function} props.onTouchEnd - 觸摸結束時的回調函數 (行動裝置)
  */
-const TrashItem = ({ item, onDragStart }) => (
+const TrashItem = ({ item, onDragStart, onTouchStart, onTouchMove, onTouchEnd }) => (
   <div
-    draggable
+    draggable // 允許桌面拖曳
     onDragStart={(e) => onDragStart(e, item)}
-    className="text-6xl cursor-grab p-2 sm:p-4 bg-white/20 rounded-lg shadow-md hover:bg-white/40 transition-colors flex items-center justify-center aspect-square"
-    style={{ touchAction: 'none' }} // Prevent default touch actions that interfere with drag
+    onTouchStart={(e) => onTouchStart(e, item)} // 行動裝置觸摸開始
+    onTouchMove={onTouchMove} // 行動裝置觸摸移動
+    onTouchEnd={onTouchEnd} // 行動裝置觸摸結束
+    // Tailwind class 和自定義 class (用於拖曳視覺回饋)
+    className="text-6xl cursor-grab p-2 sm:p-4 bg-white/20 rounded-lg shadow-md hover:bg-white/40 transition-colors flex items-center justify-center aspect-square trash-item"
+    style={{ touchAction: 'none' }} // 防止瀏覽器預設的觸摸行為干擾拖曳
+    id={`trash-item-${item.id}`} // 為觸摸事件提供唯一的 ID 參考
   >
     {item.emoji}
   </div>
@@ -184,18 +195,21 @@ const TrashItem = ({ item, onDragStart }) => (
  * 回收桶組件 (可放置拖曳項目)
  * @param {object} props - 組件屬性
  * @param {object} props.bin - 回收桶物件 { type, emoji }
- * @param {function} props.onDrop - 放置項目時的回調函數
- * @param {function} props.onDragOver - 拖曳項目經過時的回調函數
+ * @param {function} props.onDrop - 放置項目時的回調函數 (桌面)
+ * @param {function} props.onDragOver - 拖曳項目經過時的回調函數 (桌面)
+ * @param {function} props.onTouchEnd - 觸摸結束時的回調函數 (行動裝置，用於判斷放置)
  */
-const Bin = ({ bin, onDrop, onDragOver }) => (
+const Bin = ({ bin, onDrop, onDragOver, onTouchEnd }) => (
   <div
-    onDrop={(e) => onDrop(e, bin.type)}
-    onDragOver={onDragOver}
-    // 調整寬度為 flex-1 和 min-w，讓其更彈性地分佈空間
-    className="flex flex-col items-center justify-center flex-1 min-w-[100px] max-w-[150px] h-28 sm:h-32 bg-white bg-opacity-20 rounded-lg border-2 border-dashed border-white p-1 transform transition-transform hover:scale-105 active:scale-95 duration-150"
+    onDrop={(e) => onDrop(e, bin.type)} // 桌面放置
+    onDragOver={onDragOver} // 桌面拖曳經過
+    onTouchEnd={(e) => onTouchEnd(e, bin.type)} // 行動裝置觸摸結束時判斷是否放置
+    // Tailwind class 和自定義 class (用於 hover 視覺回饋)
+    className="flex flex-col items-center justify-center flex-1 min-w-[100px] max-w-[150px] h-28 sm:h-32 bg-white bg-opacity-20 rounded-lg border-2 border-dashed border-white p-1 transform transition-transform hover:scale-105 active:scale-95 duration-150 text-black bin"
+    id={`bin-${bin.type}`} // 為觸摸事件提供唯一的 ID 參考
   >
     <div className="text-4xl sm:text-5xl">{bin.emoji}</div>
-    <div className="text-white font-semibold mt-1 text-center text-xs sm:text-base leading-tight">{bin.type}</div>
+    <div className="text-black font-semibold mt-1 text-center text-xs sm:text-base leading-tight">{bin.type}</div>
   </div>
 );
 
@@ -210,12 +224,28 @@ const Game = ({ onGameEnd, allTrashItems }) => {
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState({ show: false, message: '', color: '' });
   const [isInitialized, setIsInitialized] = useState(false);
+  const draggedItemRef = useRef(null); // Ref to store the currently dragged DOM element for touch
+  const currentDraggedItem = useRef(null); // Ref to store the data of the currently dragged item for touch
 
   // 根據 TRASH_TYPES 和 BIN_EMOJIS 定義回收桶
   const BINS = Object.values(TRASH_TYPES).map(type => ({
     type,
     emoji: BIN_EMOJIS[type] || '🗑️' // Fallback emoji if not defined
   }));
+
+  // 清理拖曳項目位置，在組件卸載或拖曳結束時
+  useEffect(() => {
+    return () => {
+      if (draggedItemRef.current) {
+        draggedItemRef.current.style.position = '';
+        draggedItemRef.current.style.left = '';
+        draggedItemRef.current.style.top = '';
+        draggedItemRef.current.style.width = '';
+        draggedItemRef.current.style.height = '';
+        draggedItemRef.current.classList.remove('dragging');
+      }
+    };
+  }, []);
 
   // 初始化遊戲：從所有題目中隨機選取 ITEMS_PER_ROUND 個作為本回合題目
   useEffect(() => {
@@ -255,19 +285,16 @@ const Game = ({ onGameEnd, allTrashItems }) => {
   }, []);
 
   /**
-   * 處理拖曳開始事件
+   * 處理拖曳開始事件 (桌面滑鼠拖曳)
    * @param {DragEvent} e - 拖曳事件物件
    * @param {object} item - 被拖曳的垃圾項目
    */
   const handleDragStart = (e, item) => {
     e.dataTransfer.setData('trashInfo', JSON.stringify(item));
-    // 移除自訂拖曳圖像的程式碼，讓瀏覽器處理預設的視覺回饋
-    // const dragImage = document.createElement('div');
-    // dragImage.className = 'text-6xl opacity-70';
-    // dragImage.textContent = item.emoji;
-    // document.body.appendChild(dragImage);
-    // e.dataTransfer.setDragImage(dragImage, 30, 30);
-    // dragImage.remove();
+    currentDraggedItem.current = item; // 儲存項目資料
+    // 為桌面拖曳添加視覺回饋 class (在 index.css 中定義)
+    e.currentTarget.classList.add('dragging');
+    draggedItemRef.current = e.currentTarget; // 儲存 DOM 元素參考
   };
 
   /**
@@ -279,13 +306,37 @@ const Game = ({ onGameEnd, allTrashItems }) => {
   };
 
   /**
-   * 處理放置事件
-   * @param {DragEvent} e - 放置事件物件
+   * 處理放置事件 (桌面滑鼠拖曳和行動裝置觸摸拖曳共用)
+   * @param {DragEvent|TouchEvent} e - 放置事件物件
    * @param {string} binType - 目標回收桶的類型
    */
   const handleDrop = useCallback((e, binType) => {
     e.preventDefault();
-    const trashInfo = JSON.parse(e.dataTransfer.getData('trashInfo'));
+
+    let trashInfo;
+    if (e.type === 'drop') { // 桌面拖曳結束
+      trashInfo = JSON.parse(e.dataTransfer.getData('trashInfo'));
+      // 移除桌面拖曳的視覺回饋 class
+      if (draggedItemRef.current) {
+        draggedItemRef.current.classList.remove('dragging');
+        draggedItemRef.current = null;
+        currentDraggedItem.current = null;
+      }
+    } else if (e.type === 'touchend') { // 行動裝置觸摸拖曳結束
+      trashInfo = currentDraggedItem.current; // 從 ref 獲取項目資料
+      // 重置行動裝置拖曳的定位和移除視覺回饋 class
+      if (draggedItemRef.current) {
+        draggedItemRef.current.style.position = '';
+        draggedItemRef.current.style.left = '';
+        draggedItemRef.current.style.top = '';
+        draggedItemRef.current.style.width = '';
+        draggedItemRef.current.style.height = '';
+        draggedItemRef.current.classList.remove('dragging');
+        draggedItemRef.current = null;
+        currentDraggedItem.current = null;
+      }
+      if (!trashInfo) return; // 如果沒有拖曳中的項目，則直接返回
+    }
 
     if (trashInfo.type === binType) {
       setScore(prev => prev + 10);
@@ -299,6 +350,117 @@ const Game = ({ onGameEnd, allTrashItems }) => {
     setItems(prev => prev.filter(item => item.id !== trashInfo.id));
   }, [showFeedback]);
 
+  // --- 行動裝置拖曳處理函式 ---
+
+  /**
+   * 處理觸摸開始事件 (行動裝置拖曳開始)
+   * @param {TouchEvent} e - 觸摸事件物件
+   * @param {object} item - 被拖曳的垃圾項目
+   */
+  const handleTouchStart = useCallback((e, item) => {
+    e.preventDefault(); // 防止預設行為，如頁面滾動
+
+    currentDraggedItem.current = item; // 儲存當前拖曳的項目資料
+    draggedItemRef.current = e.currentTarget; // 儲存當前拖曳的 DOM 元素參考
+
+    // 獲取元素初始位置和尺寸
+    const rect = draggedItemRef.current.getBoundingClientRect();
+    // 將元素設為固定定位，使其脫離文檔流並跟隨觸摸
+    draggedItemRef.current.style.position = 'fixed';
+    draggedItemRef.current.style.left = `${rect.left}px`;
+    draggedItemRef.current.style.top = `${rect.top}px`;
+    draggedItemRef.current.style.width = `${rect.width}px`;
+    draggedItemRef.current.style.height = `${rect.height}px`;
+    // 添加拖曳視覺回饋 class (在 index.css 中定義)
+    draggedItemRef.current.classList.add('dragging');
+  }, []);
+
+  /**
+   * 處理觸摸移動事件 (行動裝置拖曳中)
+   * @param {TouchEvent} e - 觸摸事件物件
+   */
+  const handleTouchMove = useCallback((e) => {
+    if (!draggedItemRef.current || !currentDraggedItem.current) return;
+
+    e.preventDefault(); // 防止頁面滾動
+
+    const touch = e.touches[0]; // 獲取第一個觸摸點
+    // 更新拖曳項目位置，使其跟隨觸摸點
+    draggedItemRef.current.style.left = `${touch.clientX - draggedItemRef.current.offsetWidth / 2}px`;
+    draggedItemRef.current.style.top = `${touch.clientY - draggedItemRef.current.offsetHeight / 2}px`;
+
+    // 檢查是否在回收桶上方並添加視覺回饋
+    BINS.forEach(bin => {
+      const binElement = document.getElementById(`bin-${bin.type}`);
+      if (binElement) {
+        const binRect = binElement.getBoundingClientRect();
+        if (
+          touch.clientX > binRect.left &&
+          touch.clientX < binRect.right &&
+          touch.clientY > binRect.top &&
+          touch.clientY < binRect.bottom
+        ) {
+          binElement.classList.add('hovered-bin'); // 添加 hover 效果 class
+        } else {
+          binElement.classList.remove('hovered-bin');
+        }
+      }
+    });
+  }, [BINS]);
+
+  /**
+   * 處理觸摸結束事件 (行動裝置拖曳結束)
+   * @param {TouchEvent} e - 觸摸事件物件
+   * @param {string} [binType] - 如果是從 Bin 組件觸發，則為回收桶類型
+   */
+  const handleTouchEnd = useCallback((e) => {
+    if (!draggedItemRef.current || !currentDraggedItem.current) return;
+
+    const touch = e.changedTouches[0]; // 獲取觸摸結束的點
+    let droppedInBinType = null;
+
+    // 判斷拖曳項目是否放置在任何回收桶上方
+    for (const bin of BINS) {
+      const binElement = document.getElementById(`bin-${bin.type}`);
+      if (binElement) {
+        binElement.classList.remove('hovered-bin'); // 移除所有回收桶的 hover 效果
+        const binRect = binElement.getBoundingClientRect();
+        if (
+          touch.clientX > binRect.left &&
+          touch.clientX < binRect.right &&
+          touch.clientY > binRect.top &&
+          touch.clientY < binRect.bottom
+        ) {
+          droppedInBinType = bin.type; // 找到放置的回收桶類型
+          break;
+        }
+      }
+    }
+
+    if (droppedInBinType) {
+      // 如果放置在回收桶上，調用 handleDrop 處理邏輯
+      handleDrop(e, droppedInBinType);
+    } else {
+      // 如果沒有放置在任何回收桶上，則扣分並移除項目
+      setScore(prev => prev - 5);
+      showFeedback(`沒有分到回收桶裡，扣5分！`, false);
+      setItems(prev => prev.filter(item => item.id !== currentDraggedItem.current.id));
+    }
+
+    // 清理拖曳狀態
+    if (draggedItemRef.current) {
+      draggedItemRef.current.style.position = '';
+      draggedItemRef.current.style.left = '';
+      draggedItemRef.current.style.top = '';
+      draggedItemRef.current.style.width = '';
+      draggedItemRef.current.style.height = '';
+      draggedItemRef.current.classList.remove('dragging');
+    }
+    draggedItemRef.current = null;
+    currentDraggedItem.current = null;
+  }, [BINS, handleDrop, showFeedback]);
+
+
   return (
     <div className="relative w-full h-full flex flex-col justify-between p-2 sm:p-4">
       <Scoreboard score={score} itemsLeft={items.length} />
@@ -310,7 +472,16 @@ const Game = ({ onGameEnd, allTrashItems }) => {
       <div className="flex-grow flex items-center justify-center p-4">
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4 p-4 bg-black/20 rounded-xl max-w-full overflow-auto">
           {items.length > 0 ? (
-            items.map(item => <TrashItem key={item.id} item={item} onDragStart={handleDragStart} />)
+            items.map(item => (
+              <TrashItem
+                key={item.id}
+                item={item}
+                onDragStart={handleDragStart}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd} // 修正：傳遞 handleTouchEnd
+              />
+            ))
           ) : (
             <div className="col-span-3 sm:col-span-5 text-center text-white text-xl p-8">
               {isInitialized ? '所有物品已分類！' : '加載物品中...'}
@@ -321,7 +492,13 @@ const Game = ({ onGameEnd, allTrashItems }) => {
       {/* 調整回收桶容器的樣式，使用 flex-wrap 和 justify-center */}
       <div className="flex flex-wrap justify-center items-center p-2 bg-black/30 rounded-xl gap-2 sm:gap-4">
         {BINS.map(bin => (
-          <Bin key={bin.type} bin={bin} onDrop={handleDrop} onDragOver={handleDragOver} />
+          <Bin
+            key={bin.type}
+            bin={bin}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onTouchEnd={handleTouchEnd} // 修正：傳遞 handleTouchEnd
+          />
         ))}
       </div>
     </div>
@@ -457,6 +634,19 @@ const AdminPanel = ({ items, setItems, onGoToGame, db, appId }) => {
                 maxLength="2"
               />
             </div>
+            <div className="w-full sm:w-auto">
+              <label htmlFor="name" className="block mb-1 font-semibold">物品名稱</label>
+              <input
+                type="text"
+                id="emoji"
+                name="emoji"
+                value={currentItem.emoji}
+                onChange={handleFormChange}
+                className="w-full p-2 rounded bg-gray-800 text-white text-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="例如：食物包裝紙"
+                maxLength="2"
+              />
+            </div>
             <div className="w-full sm:w-auto flex-grow">
               <label htmlFor="type" className="block mb-1 font-semibold">分類</label>
               <select
@@ -544,9 +734,6 @@ export default function App() {
   // Firebase 初始化和認證
   useEffect(() => {
     try {
-      // 直接在這裡設定您的 Firebase 配置
-      // 注意：將 API 金鑰直接硬編碼在前端程式碼中存在安全風險，因為它們將公開可見。
-      // 對於生產環境，強烈建議使用環境變數或更安全的配置方法。
       const firebaseConfig = {
         apiKey: "AIzaSyDUkrkOvDABCV0Ug1suZGmf43NuMDFeuI0", // <-- 請替換為您的實際 API Key
         authDomain: "recycle-76cf4.firebaseapp.com", // <-- 請替換為您的實際 Auth Domain
@@ -604,8 +791,8 @@ export default function App() {
           const existingDocsCheck = await getDocs(itemsCollectionRef);
           if (existingDocsCheck.empty) {
             for (const item of DEFAULT_TRASH_ITEMS) {
-                // 使用 setDoc 並指定 ID，確保冪等性
-                await setDoc(doc(db, itemsCollectionRef.path, item.id), item);
+              // 使用 setDoc 並指定 ID，確保冪等性
+              await setDoc(doc(db, itemsCollectionRef.path, item.id), item);
             }
             // 重新獲取一次，確保預設題目被加載
             const updatedSnapshot = await getDocs(itemsCollectionRef);

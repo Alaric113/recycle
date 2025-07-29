@@ -1,8 +1,10 @@
 {
   "name": "litgame",
   "version": "0.1.0",
+  "homepage": "https://alaric113.github.io/recycle",
   "private": true,
   "dependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
@@ -16,9 +18,12 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "build:css": "tailwindcss -i ./src/index.css -o ./dist/output.css --minify",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -40,6 +45,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.11"
   }
