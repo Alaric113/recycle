@@ -640,13 +640,13 @@ const AdminPanel = ({ items, setItems, onGoToGame, db, appId }) => {
               <label htmlFor="name" className="block mb-1 font-semibold">物品名稱</label>
               <input
                 type="text"
-                id="emoji"
-                name="emoji"
-                value={currentItem.emoji}
+                id="name"
+                name="name"
+                value={currentItem.name}
                 onChange={handleFormChange}
                 className="w-full p-2 rounded bg-gray-800 text-white text-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="例如：食物包裝紙"
-                maxLength="2"
+                
               />
             </div>
             <div className="w-full sm:w-auto flex-grow">
