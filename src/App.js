@@ -136,7 +136,7 @@ export default function App() {
       case 'playing':
         return <Game onGameEnd={handleGameEnd} allTrashItems={allTrashItems} />;
       case 'end':
-        return <RoundCompleteScreen score={finalScore} onRestart={handleRestart} />;
+        return <RoundCompleteScreen score={finalScore} onRestart={handleGoToStart} />;
       case 'admin':
         return <AdminPanel items={allTrashItems} db={db} appId={appId} onGoToGame={handleGoToStart} />;
       case 'start':

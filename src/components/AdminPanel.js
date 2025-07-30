@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { collection, doc, setDoc, addDoc, deleteDoc } from 'firebase/firestore';
 import { TRASH_TYPES } from '../constants';
 import Modal from './Modal';
-console.log('TRASH_TYPES', TRASH_TYPES);
+
 /**
  * 管理者介面組件，用於新增、編輯和刪除垃圾題目
  */

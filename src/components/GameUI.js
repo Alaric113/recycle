@@ -49,7 +49,7 @@ export const RoundCompleteScreen = ({ score, onRestart }) => (
       onClick={onRestart}
       className="px-8 py-4 bg-blue-500 text-white font-bold rounded-full text-3xl shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 border-b-4 border-blue-700 hover:border-blue-600"
     >
-      再玩一回合
+      回主畫面
     </button>
   </div>
 );
