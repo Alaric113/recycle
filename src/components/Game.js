@@ -4,7 +4,7 @@ import { Scoreboard } from './GameUI';
 import { TrashItem, Bin } from './DraggableItems';
 import { shuffleArray } from '../utils';
 import { TRASH_TYPES, BIN_EMOJIS, ITEMS_PER_ROUND, DEFAULT_TRASH_ITEMS } from '../constants';
-
+import CenteredModal from './NameModel';
 /**
  * 主要遊戲組件
  */
@@ -15,7 +15,16 @@ const Game = ({ onGameEnd, allTrashItems }) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const draggedItemRef = useRef(null);
   const currentDraggedItem = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [inputValue, setInputValue] = useState('');
 
+  const handleClose = () => setIsOpen(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('輸入的是：', inputValue);
+    setIsOpen(false);
+  };
   const BINS = (TRASH_TYPES && BIN_EMOJIS) ? Object.values(TRASH_TYPES).map(type => ({
     type,
     emoji: BIN_EMOJIS[type] || '🗑️'
@@ -150,7 +159,18 @@ const Game = ({ onGameEnd, allTrashItems }) => {
   }, [handleDropLogic, showFeedback]);
 
   return (
+    
+
+
     <div className="relative w-full h-full flex flex-col justify-between p-2 sm:p-4">
+      <CenteredModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="請輸入名子"
+      onSubmit={handleSubmit}
+      inputValue={inputValue}
+      setInputValue={setInputValue}
+    />
       <Scoreboard score={score} itemsLeft={items.length} />
       {feedback.show && (
         <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 rounded-lg text-white font-bold text-lg sm:text-2xl z-30 text-center transition-opacity duration-300 ${feedback.color} ${feedback.show ? 'opacity-100' : 'opacity-0'}`}>
