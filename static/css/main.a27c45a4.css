@@ -1,0 +1,2 @@
+#root,body{height:100vh;margin:0;overflow:hidden;padding:0;width:100vw}.trash-item.dragging{box-shadow:0 10px 15px -3px #00000080,0 4px 6px -2px #0000000d;cursor:grabbing;position:fixed;transform:scale(1.1);transition:none;z-index:40}.bin.hovered-bin{background-color:#ffffff4d;border-color:#3b82f6;transform:scale(1.03)}
+/*# sourceMappingURL=main.a27c45a4.css.map*/
