@@ -11,12 +11,12 @@ export const TrashItem = ({ item, onDragStart, onTouchStart, onTouchMove, onTouc
     onTouchStart={(e) => onTouchStart(e, item)}
     onTouchMove={onTouchMove}
     onTouchEnd={onTouchEnd}
-    className="text-6xl cursor-grab p-2 sm:p-4 bg-white/20 rounded-lg shadow-md hover:bg-white/40 transition-colors flex flex-col items-center justify-center aspect-square trash-item"
+    className=" text-6xl cursor-grab p-2 sm:p-4 bg-white/20 rounded-lg shadow-md hover:bg-white/40 transition-colors flex flex-col items-center justify-center aspect-square trash-item"
     style={{ touchAction: 'none' }}
     id={`trash-item-${item.id}`}
   >
     {item.emoji}
-    <span className='text-black text-2xl font-bold'>
+    <span className='text-black text-2xl font-bold select-none'>
       {item.name}
     </span>
   </div>

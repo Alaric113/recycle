@@ -7,23 +7,26 @@ export default function CenteredModal({ isOpen, onClose, title, onSubmit, inputV
   return (
     <>
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40"
+        className="fixed inset-0 bg-black/35 bg-opacity-50 backdrop-blur-sm z-40"
         onClick={onClose}
       />
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
         <form
-          onSubmit={onSubmit}
+          onSubmit={(e) => {
+            e.preventDefault(); // Prevent default form submission
+            onSubmit(e); // Pass the event object to the onSubmit handler
+          }}
           className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full p-6 relative"
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           <h2 className="text-2xl font-semibold mb-4">{title}</h2>
           <div className="mb-4">
             <input
               type="text"
               className="w-full p-2 rounded border-gray-300 border"
-              placeholder="請輸入名子"
+              placeholder="請輸入內容"
               value={inputValue}
-              onChange={e => setInputValue(e.target.value)}
+              onChange={(e) => setInputValue(e.target.value)}
               required
             />
           </div>

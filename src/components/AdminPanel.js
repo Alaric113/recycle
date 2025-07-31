@@ -1,22 +1,30 @@
-// --- File: src/components/AdminPanel.js ---
 import React, { useState } from 'react';
 import { collection, doc, setDoc, addDoc, deleteDoc } from 'firebase/firestore';
-import { TRASH_TYPES } from '../constants';
+import { TRASH_TYPES, QUIZ_TYPES } from '../constants'; // 加入 QUIZ_TYPES 匯入
 import Modal from './Modal';
 
 /**
- * 管理者介面組件，用於新增、編輯和刪除垃圾題目
+ * 管理者介面組件，用於新增、編輯和刪除測驗題目
  */
 const AdminPanel = ({ items, onGoToGame, db, appId }) => {
+  // 加入缺少的狀態變數
   const [isEditing, setIsEditing] = useState(false);
-  const [currentItem, setCurrentItem] = useState({ id: null, emoji: '', name: '', type: TRASH_TYPES ? TRASH_TYPES.PAPER : '' });
+  const [currentItem, setCurrentItem] = useState({
+    id: null,
+    type: QUIZ_TYPES.BIN_CLASSIFICATION,
+    question: '',
+    item: { emoji: '', name: '' }, // for bin classification
+    options: ['', ''], // for multiple choice
+    correctAnswer: ''
+  });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showAlertDialog, setShowAlertDialog] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [confirmAction, setConfirmAction] = useState(null);
 
-  const itemsCollectionRef = collection(db, `artifacts/${appId}/public/data/recyclingGameItems`);
+  const itemsCollectionRef = collection(db, `artifacts/${appId}/public/data/quizItems`);
 
+  // 加入缺少的處理函數
   const handleEditClick = (item) => {
     setIsEditing(true);
     setCurrentItem(item);
@@ -35,10 +43,17 @@ const AdminPanel = ({ items, onGoToGame, db, appId }) => {
     });
     setShowConfirmModal(true);
   };
-  
+
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setCurrentItem({ id: null, emoji: '',name: '', type: TRASH_TYPES.PAPER });
+    setCurrentItem({
+      id: null,
+      type: QUIZ_TYPES.BIN_CLASSIFICATION,
+      question: '',
+      item: { emoji: '', name: '' },
+      options: ['', ''],
+      correctAnswer: ''
+    });
   };
 
   const handleFormChange = (e) => {
@@ -48,93 +63,291 @@ const AdminPanel = ({ items, onGoToGame, db, appId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!currentItem.emoji.trim() || !currentItem.name.trim()) {
-      setModalMessage('Emoji 圖示與物品名稱不能為空！');
+    
+    // 驗證表單
+    if (!currentItem.question.trim()) {
+      setModalMessage('問題不能為空！');
+      setShowAlertDialog(true);
+      return;
+    }
+
+    if (currentItem.type === QUIZ_TYPES.BIN_CLASSIFICATION) {
+      if (!currentItem.item.emoji.trim() || !currentItem.item.name.trim()) {
+        setModalMessage('物品emoji和名稱不能為空！');
+        setShowAlertDialog(true);
+        return;
+      }
+    } else if (currentItem.type === QUIZ_TYPES.MULTIPLE_CHOICE) {
+      if (currentItem.options.filter(opt => opt.trim()).length < 2) {
+        setModalMessage('至少需要兩個選項！');
+        setShowAlertDialog(true);
+        return;
+      }
+    }
+
+    if (!currentItem.correctAnswer.trim()) {
+      setModalMessage('正確答案不能為空！');
       setShowAlertDialog(true);
       return;
     }
 
     try {
+      const itemData = {
+        type: currentItem.type,
+        question: currentItem.question,
+        correctAnswer: currentItem.correctAnswer,
+      };
+
+      if (currentItem.type === QUIZ_TYPES.BIN_CLASSIFICATION) {
+        itemData.item = currentItem.item;
+      } else if (currentItem.type === QUIZ_TYPES.MULTIPLE_CHOICE) {
+        itemData.options = currentItem.options.filter(opt => opt.trim());
+      }
+
       if (isEditing) {
-        await setDoc(doc(db, itemsCollectionRef.path, currentItem.id), {
-          emoji: currentItem.emoji,
-          name: currentItem.name,
-          type: currentItem.type,
-        }, { merge: true });
+        await setDoc(doc(db, itemsCollectionRef.path, currentItem.id), itemData, { merge: true });
       } else {
-        await addDoc(itemsCollectionRef, {
-          emoji: currentItem.emoji,
-          name: currentItem.name,
-          type: currentItem.type,
-        });
+        await addDoc(itemsCollectionRef, itemData);
       }
     } catch (error) {
       console.error("儲存題目失敗:", error);
       setModalMessage(`儲存題目失敗: ${error.message}`);
       setShowAlertDialog(true);
     }
+
     handleCancelEdit();
   };
 
-  return (
-    <div className="p-4 sm:p-8 text-white w-full h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-4xl font-bold drop-shadow-lg">管理題目</h1>
-          <button onClick={onGoToGame} className="px-4 py-2 bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors shadow-md">返回遊戲</button>
-        </div>
+  // 根據題型渲染不同的表單
+  const renderQuestionForm = () => {
+    switch (currentItem.type) {
+      case QUIZ_TYPES.BIN_CLASSIFICATION:
+        return (
+          <>
+            <input
+              type="text"
+              name="question"
+              value={currentItem.question}
+              onChange={handleFormChange}
+              placeholder="問題 (例：這個物品該怎麼回收？)"
+              className="w-full p-2 border rounded mb-2"
+            />
+            <input
+              type="text"
+              value={currentItem.item.emoji}
+              onChange={(e) => setCurrentItem(prev => ({
+                ...prev,
+                item: { ...prev.item, emoji: e.target.value }
+              }))}
+              placeholder="物品emoji"
+              className="w-full p-2 border rounded mb-2"
+            />
+            <input
+              type="text"
+              value={currentItem.item.name}
+              onChange={(e) => setCurrentItem(prev => ({
+                ...prev,
+                item: { ...prev.item, name: e.target.value }
+              }))}
+              placeholder="物品名稱"
+              className="w-full p-2 border rounded mb-2"
+            />
+            <select
+              value={currentItem.correctAnswer}
+              onChange={(e) => setCurrentItem(prev => ({
+                ...prev,
+                correctAnswer: e.target.value
+              }))}
+              className="w-full p-2 border rounded mb-2"
+            >
+              <option value="">選擇正確分類</option>
+              {Object.values(TRASH_TYPES).map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </>
+        );
 
-        <div className="bg-white/20 p-6 rounded-lg mb-8 shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">{isEditing ? '編輯題目' : '新增題目'}</h2>
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 items-end">
-            <div className="w-full sm:w-auto">
-              <label htmlFor="emoji" className="block mb-1 font-semibold">Emoji 圖示</label>
-              <input type="text" id="emoji" name="emoji" value={currentItem.emoji} onChange={handleFormChange} className="w-full p-2 rounded bg-gray-800 text-white text-2xl focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="例如：🥤" maxLength="2" />
-            </div>
-            <div className="w-full sm:w-auto">
-              <label htmlFor="name" className="block mb-1 font-semibold">物品名稱</label>
-              <input type="text" id="name" name="name" value={currentItem.name} onChange={handleFormChange} className="w-full p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="例如：食物包裝紙" />
-            </div>
-            <div className="w-full sm:w-auto flex-grow">
-              <label htmlFor="type" className="block mb-1 font-semibold">分類</label>
-              <select id="type" name="type" value={currentItem.type} onChange={handleFormChange} className="w-full p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                {Object.values(TRASH_TYPES).map(type => (<option key={type} value={type}>{type}</option>))}
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <button type="submit" className="px-6 py-2 bg-green-600 rounded hover:bg-green-700 transition-colors shadow-md">{isEditing ? '更新' : '新增'}</button>
-              {isEditing && <button type="button" onClick={handleCancelEdit} className="px-4 py-2 bg-gray-500 rounded hover:bg-gray-600 transition-colors shadow-md">取消</button>}
-            </div>
-          </form>
-        </div>
-
-        <div>
-          <h2 className="text-2xl font-bold mb-4 drop-shadow-lg">現有題目列表</h2>
-          <div className="space-y-2">
-            {items.length > 0 ? (
-              items.map(item => (
-                <div key={item.id} className="bg-white/10 p-3 rounded-lg flex justify-between items-center shadow-sm hover:bg-white/15 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <span className="text-4xl">{item.emoji}</span>
-                    <span className="font-semibold text-lg">{item.name || '未命名'}</span>
-                    <span className="font-semibold text-lg">{item.type}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleEditClick(item)} className="px-3 py-1 bg-yellow-500 text-black rounded hover:bg-yellow-600 transition-colors">編輯</button>
-                    <button onClick={() => handleDeleteClick(item.id)} className="px-3 py-1 bg-red-600 rounded hover:bg-red-700 transition-colors">刪除</button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center text-gray-400 text-lg p-8 bg-white/10 rounded-lg">
-                目前沒有自訂題目，請新增。
+      case QUIZ_TYPES.MULTIPLE_CHOICE:
+        return (
+          <>
+            <input
+              type="text"
+              name="question"
+              value={currentItem.question}
+              onChange={handleFormChange}
+              placeholder="問題"
+              className="w-full p-2 border rounded mb-2"
+            />
+            {currentItem.options.map((option, index) => (
+              <div key={index} className="flex mb-2">
+                <input
+                  type="text"
+                  value={option}
+                  onChange={(e) => {
+                    const newOptions = [...currentItem.options];
+                    newOptions[index] = e.target.value;
+                    setCurrentItem(prev => ({ ...prev, options: newOptions }));
+                  }}
+                  placeholder={`選項 ${index + 1}`}
+                  className="flex-1 p-2 border rounded mr-2"
+                />
+                {currentItem.options.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newOptions = currentItem.options.filter((_, i) => i !== index);
+                      setCurrentItem(prev => ({ ...prev, options: newOptions }));
+                    }}
+                    className="px-3 py-2 bg-red-500 text-white rounded"
+                  >
+                    刪除
+                  </button>
+                )}
               </div>
-            )}
-          </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setCurrentItem(prev => ({
+                ...prev,
+                options: [...prev.options, '']
+              }))}
+              className="mb-2 px-4 py-2 bg-green-500 text-white rounded"
+            >
+              新增選項
+            </button>
+            <input
+              type="text"
+              value={currentItem.correctAnswer}
+              onChange={(e) => setCurrentItem(prev => ({
+                ...prev,
+                correctAnswer: e.target.value
+              }))}
+              placeholder="正確答案"
+              className="w-full p-2 border rounded mb-2"
+            />
+          </>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">測驗題目管理</h1>
+      
+      {/* 新增/編輯表單 */}
+      <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded bg-gray-50">
+        <h2 className="text-xl font-semibold mb-4">
+          {isEditing ? '編輯題目' : '新增題目'}
+        </h2>
+        
+        <select
+          value={currentItem.type}
+          onChange={(e) => setCurrentItem(prev => ({
+            ...prev,
+            type: e.target.value,
+            question: '',
+            item: { emoji: '', name: '' },
+            options: ['', ''],
+            correctAnswer: ''
+          }))}
+          className="w-full p-2 border rounded mb-2"
+        >
+          <option value={QUIZ_TYPES.BIN_CLASSIFICATION}>垃圾分類題</option>
+          <option value={QUIZ_TYPES.MULTIPLE_CHOICE}>選擇題</option>
+        </select>
+
+        {renderQuestionForm()}
+
+        <div className="flex gap-2">
+          <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded">
+            {isEditing ? '更新題目' : '新增題目'}
+          </button>
+          {isEditing && (
+            <button 
+              type="button" 
+              onClick={handleCancelEdit}
+              className="px-4 py-2 bg-gray-500 text-white rounded"
+            >
+              取消
+            </button>
+          )}
         </div>
+      </form>
+
+      {/* 題目列表 */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-4">現有題目 ({items.length})</h2>
+        {items.length === 0 ? (
+          <p className="text-gray-500">目前沒有題目</p>
+        ) : (
+          <div className="space-y-2">
+            {items.map((item) => (
+              <div key={item.id} className="p-4 bg-white/10 rounded-xl flex justify-between items-center">
+                <div>
+                  <span className="font-medium">{item.question}</span>
+                  <span className="ml-2 text-sm text-gray-600">
+                    [{item.type === QUIZ_TYPES.BIN_CLASSIFICATION ? '垃圾分類' : '選擇題'}]
+                  </span>
+                  {item.item && (
+                    <span className="ml-2">
+                      {item.item.emoji} {item.item.name}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEditClick(item)}
+                    className="px-3 py-1 bg-yellow-500/70 text-white rounded text-sm"
+                  >
+                    編輯
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(item.id)}
+                    className="px-3 py-1 bg-red-500 text-white rounded text-sm"
+                  >
+                    刪除
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      <Modal isOpen={showConfirmModal} onClose={() => setShowConfirmModal(false)} title="確認操作" message={modalMessage} onConfirm={confirmAction} confirmText="確定" cancelText="取消" />
-      <Modal isOpen={showAlertDialog} onClose={() => setShowAlertDialog(false)} title="提示" message={modalMessage} cancelText="了解" />
+
+      {/* 操作按鈕 */}
+      <div className="flex gap-4">
+        <button
+          onClick={onGoToGame}
+          className="px-6 py-3 bg-green-500 text-white rounded-lg font-semibold"
+        >
+          返回
+        </button>
+      </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title="確認操作"
+        message={modalMessage}
+        onConfirm={() => {
+          confirmAction && confirmAction();
+          setShowConfirmModal(false);
+        }}
+      />
+
+      <Modal
+        isOpen={showAlertDialog}
+        onClose={() => setShowAlertDialog(false)}
+        title="提示"
+        message={modalMessage}
+        onConfirm={() => setShowAlertDialog(false)}
+        cancelText=""
+      />
     </div>
   );
 };

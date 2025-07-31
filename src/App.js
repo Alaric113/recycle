@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { saveScore } from './hooks/eventFirestore';
 /* global __app_id, __firebase_config, __initial_auth_token */
 
 // Styles
@@ -28,6 +29,9 @@ export default function App() {
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [appId, setAppId] = useState(null);
   const [firebaseError, setFirebaseError] = useState(null);
+  const [playerName, setPlayerName] = useState('');
+  const [eventName, setEventName] = useState('');
+  const { items: quizItems, isLoading } = useFirestoreItems(db, appId, isAuthReady);
 
   // Firebase 初始化和認證
   useEffect(() => {
@@ -99,9 +103,12 @@ export default function App() {
 
   const handleGameEnd = useCallback((score) => {
     setFinalScore(score);
+    if (db && eventName && playerName) {
+      saveScore(db, eventName, playerName, score);
+    }
     setView('end');
-  }, []);
-  
+  }, [db, eventName, playerName]);
+
   const handleRestart = useCallback(() => {
       setView('playing');
   }, []);
@@ -134,14 +141,14 @@ export default function App() {
 
     switch (view) {
       case 'playing':
-        return <Game onGameEnd={handleGameEnd} allTrashItems={allTrashItems} />;
+        return <Game onGameEnd={handleGameEnd} allQuizItems={quizItems}  eventName={eventName} setPlayerName={setPlayerName} playerName={playerName}/>;
       case 'end':
         return <RoundCompleteScreen score={finalScore} onRestart={handleGoToStart} />;
       case 'admin':
         return <AdminPanel items={allTrashItems} db={db} appId={appId} onGoToGame={handleGoToStart} />;
       case 'start':
       default:
-        return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} userId={userId} />;
+        return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} userId={userId} db={db} setEventName={setEventName} />;
     }
   };
 

@@ -1,212 +1,163 @@
-// --- File: src/components/Game.js ---
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Scoreboard } from './GameUI';
-import { TrashItem, Bin } from './DraggableItems';
 import { shuffleArray } from '../utils';
-import { TRASH_TYPES, BIN_EMOJIS, ITEMS_PER_ROUND, DEFAULT_TRASH_ITEMS } from '../constants';
 import CenteredModal from './NameModel';
-/**
- * 主要遊戲組件
- */
-const Game = ({ onGameEnd, allTrashItems }) => {
+import { QUIZ_TYPES, ITEMS_PER_ROUND, DEFAULT_QUIZ_ITEMS, TRASH_TYPES, BIN_EMOJIS } from '../constants';
+
+const BUTTONS_PER_ROW = 4;
+const binTypes = Object.values(TRASH_TYPES);
+
+function chunk(array, size) {
+  return Array.from({ length: Math.ceil(array.length / size) }, (_, i) =>
+    array.slice(i * size, i * size + size)
+  );
+}
+
+const Game = ({ onGameEnd, allQuizItems, eventName, playerName }) => {
   const [items, setItems] = useState([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState({ show: false, message: '', color: '' });
-  const [isInitialized, setIsInitialized] = useState(false);
-  const draggedItemRef = useRef(null);
-  const currentDraggedItem = useRef(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState('');
 
-  const handleClose = () => setIsOpen(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('輸入的是：', inputValue);
-    setIsOpen(false);
-  };
-  const BINS = (TRASH_TYPES && BIN_EMOJIS) ? Object.values(TRASH_TYPES).map(type => ({
-    type,
-    emoji: BIN_EMOJIS[type] || '🗑️'
-  })) : [];
-
-  // 初始化遊戲
   useEffect(() => {
-    const sourceItems = allTrashItems.length > 0 ? allTrashItems : DEFAULT_TRASH_ITEMS;
-    const roundItems = shuffleArray([...sourceItems]).slice(0, ITEMS_PER_ROUND);
-    setItems(roundItems);
+    const source = (allQuizItems && allQuizItems.length > 0) ? allQuizItems : DEFAULT_QUIZ_ITEMS;
+    setItems(shuffleArray([...source]).slice(0, ITEMS_PER_ROUND));
+    setCurrentIdx(0);
     setScore(0);
-    setIsInitialized(true);
-  }, [allTrashItems]);
+  }, [allQuizItems]);
 
-  // 檢查遊戲是否結束
   useEffect(() => {
-    if (isInitialized && items.length === 0) {
-      const timer = setTimeout(() => {
+    if (items.length > 0 && currentIdx >= items.length) {
+      const timeout = setTimeout(() => {
         onGameEnd(score);
       }, feedback.show ? 1500 : 0);
-      return () => clearTimeout(timer);
+      return () => clearTimeout(timeout);
     }
-  }, [items, score, onGameEnd, isInitialized, feedback.show]);
-  
+  }, [currentIdx, items.length, score, onGameEnd, feedback.show]);
 
+  const handleAnswer = useCallback(
+    (selectedAnswer) => {
+      if (currentIdx >= items.length) return;
+      const curItem = items[currentIdx];
+      const correct = selectedAnswer === curItem.correctAnswer;
+      
+      setFeedback({
+        show: true,
+        message: correct 
+          ? '回答正確！+10分' 
+          : `答錯了！正確答案是：${curItem.correctAnswer}`,
+        color: correct ? 'bg-green-500' : 'bg-red-500',
+      });
+      
+      if (correct) setScore(prev => prev + 10);
+      
+      setTimeout(() => {
+        setFeedback({ show: false, message: '', color: '' });
+        setCurrentIdx(idx => idx + 1);
+      }, 1500);
+    },
+    [currentIdx, items]
+  );
 
-  // 清理拖曳樣式
-  useEffect(() => {
-    return () => {
-      if (draggedItemRef.current) {
-        draggedItemRef.current.classList.remove('dragging');
-        draggedItemRef.current.style.position = '';
-        draggedItemRef.current.style.left = '';
-        draggedItemRef.current.style.top = '';
-        draggedItemRef.current.style.width = '';
-        draggedItemRef.current.style.height = '';
-      }
-    };
-  }, []);
+  if (!items.length || currentIdx >= items.length) {
+    return <div className="flex flex-col items-center mt-24">載入中...</div>;
+  }
 
-  const showFeedback = useCallback((message, isCorrect) => {
-    setFeedback({ show: true, message, color: isCorrect ? 'bg-green-500' : 'bg-red-500' });
-    setTimeout(() => setFeedback({ show: false, message: '', color: '' }), 1500);
-  }, []);
+  const currentItem = items[currentIdx];
 
-  const handleDropLogic = useCallback((itemData, binType) => {
-    if (itemData.type === binType) {
-      setScore(prev => prev + 10);
-      showFeedback('分類正確！+10分', true);
-    } else {
-      showFeedback(`分錯囉！${itemData.emoji} ${itemData.name} 應該是「${itemData.type}」`, false);
-    }
-    setItems(prev => prev.filter(item => item.id !== itemData.id));
-  }, [showFeedback]);
-  
-  // --- 滑鼠拖曳事件 ---
-  const handleDragStart = (e, item) => {
-    e.dataTransfer.setData('trashInfo', JSON.stringify(item));
-    e.currentTarget.classList.add('dragging');
+  // 渲染題目區域
+  const renderQuestionArea = () => {
+    return (
+      <div className="bg-black/10 rounded-lg p-8 mb-8 w-full max-w-2xl">
+       
+        
+        {/* 問題文字 */}
+        <div className="text-2xl mb-6 text-center font-medium text-gray-800">
+          {currentItem.question}
+        </div>
+        
+        {/* 如果是垃圾分類題，顯示物品 */}
+        {currentItem.type === QUIZ_TYPES.BIN_CLASSIFICATION && currentItem.item && (
+          <div className="text-center">
+            <span className="text-6xl">{currentItem.item.emoji}</span>
+            <span className="block mt-4 text-2xl font-semibold text-gray-700">
+              {currentItem.item.name}
+            </span>
+          </div>
+        )}
+      </div>
+    );
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
+  // 渲染答案區域
+  const renderAnswerArea = () => {
+    return (
+      <div className=" rounded-lg p-8 w-full max-w-2xl">
+        <h2 className="text-sm text-black mb-6 text-center">請選擇答案</h2>
+        
+        {currentItem.type === QUIZ_TYPES.BIN_CLASSIFICATION ? (
+          // 垃圾分類答案區 - 8個分類按鈕
+          <div>
+            {chunk(binTypes, BUTTONS_PER_ROW).map((row, i) => (
+              <div key={i} className="flex justify-center mb-4">
+                {row.map(type => (
+                  <button
+                    key={type}
+                    className="flex-1 bg-white/30 hover:bg-blue-100 border-2 border-blue-300 rounded-lg px-4 py-3 mx-2 text-xl transition flex flex-col items-center disabled:opacity-50 shadow-sm"
+                    disabled={feedback.show}
+                    onClick={() => handleAnswer(type)}
+                  >
+                    <span className="text-2xl mb-1">{BIN_EMOJIS?.[type]}</span>
+                    <span className="text-sm font-medium">{type}</span>
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : (
+          // 選擇題答案區 - 選項按鈕
+          <div className="space-y-4">
+            {currentItem.options?.map((option, index) => (
+              <button
+                key={index}
+                className="w-full bg-white hover:bg-blue-100 border-2 border-blue-300 rounded-lg px-6 py-4 text-xl transition disabled:opacity-50 shadow-sm font-medium"
+                disabled={feedback.show}
+                onClick={() => handleAnswer(option)}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
-
-  const handleDrop = (e, binType) => {
-    e.preventDefault();
-    const trashInfo = JSON.parse(e.dataTransfer.getData('trashInfo'));
-    document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
-    handleDropLogic(trashInfo, binType);
-  };
-
-  // --- 觸控拖曳事件 ---
-  const handleTouchStart = useCallback((e, item) => {
-    currentDraggedItem.current = item;
-    const target = e.currentTarget;
-    draggedItemRef.current = target;
-    const rect = target.getBoundingClientRect();
-    
-    target.classList.add('dragging');
-    target.style.position = 'fixed';
-    target.style.width = `${rect.width}px`;
-    target.style.height = `${rect.height}px`;
-    target.style.left = `${e.touches[0].clientX - rect.width / 2}px`;
-    target.style.top = `${e.touches[0].clientY - rect.height / 2}px`;
-  }, []);
-
-  const handleTouchMove = useCallback((e) => {
-    if (!draggedItemRef.current) return;
-    const touch = e.touches[0];
-    draggedItemRef.current.style.left = `${touch.clientX - draggedItemRef.current.offsetWidth / 2}px`;
-    draggedItemRef.current.style.top = `${touch.clientY - draggedItemRef.current.offsetHeight / 2}px`;
-
-    document.querySelectorAll('.bin').forEach(binEl => {
-        const binRect = binEl.getBoundingClientRect();
-        if (touch.clientX > binRect.left && touch.clientX < binRect.right && touch.clientY > binRect.top && touch.clientY < binRect.bottom) {
-            binEl.classList.add('hovered-bin');
-        } else {
-            binEl.classList.remove('hovered-bin');
-        }
-    });
-  }, []);
-
-  const handleTouchEnd = useCallback((e) => {
-    if (!draggedItemRef.current || !currentDraggedItem.current) return;
-    
-    const touch = e.changedTouches[0];
-    let droppedInBinType = null;
-
-    document.querySelectorAll('.bin').forEach(binEl => {
-        const binRect = binEl.getBoundingClientRect();
-        if (touch.clientX > binRect.left && touch.clientX < binRect.right && touch.clientY > binRect.top && touch.clientY < binRect.bottom) {
-            droppedInBinType = binEl.id.replace('bin-', '');
-        }
-        binEl.classList.remove('hovered-bin');
-    });
-
-    if (droppedInBinType) {
-        handleDropLogic(currentDraggedItem.current, droppedInBinType);
-    } else {
-        // 如果沒有放到回收桶，可以選擇不處理或返回原位
-        // 這裡我們選擇直接移除並提示
-        showFeedback(`沒有分到回收桶裡！`, false);
-        setItems(prev => prev.filter(item => item.id !== currentDraggedItem.current.id));
-    }
-    
-    draggedItemRef.current.classList.remove('dragging');
-    draggedItemRef.current.style.position = '';
-    draggedItemRef.current = null;
-    currentDraggedItem.current = null;
-
-  }, [handleDropLogic, showFeedback]);
 
   return (
-    
-
-
     <div className="relative w-full h-full flex flex-col justify-between p-2 sm:p-4">
-      <CenteredModal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title="請輸入名子"
-      onSubmit={handleSubmit}
-      inputValue={inputValue}
-      setInputValue={setInputValue}
-    />
-      <Scoreboard score={score} itemsLeft={items.length} />
+      
+      <Scoreboard score={score} itemsLeft={items.length - currentIdx} eventName={eventName} />
+      
+      {/* 題目區域 */}
+      <div className="flex-grow flex items-center justify-center p-4">
+        
+          {renderQuestionArea()}
+        
+      </div>
       {feedback.show && (
-        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 rounded-lg text-white font-bold text-lg sm:text-2xl z-30 text-center transition-opacity duration-300 ${feedback.color} ${feedback.show ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`mt-8 p-4 rounded-lg text-white text-xl ${feedback.color} shadow-lg`}>
           {feedback.message}
         </div>
       )}
-      <div className="flex-grow flex items-center justify-center p-4">
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4 p-4 bg-black/20 rounded-xl max-w-full overflow-auto">
-          {items.length > 0 ? (
-            items.map(item => (
-              <TrashItem
-                key={item.id}
-                item={item}
-                onDragStart={handleDragStart}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-              />
-            ))
-          ) : (
-            <div className="col-span-3 sm:col-span-5 text-center text-white text-xl p-8">
-              {isInitialized ? '所有物品已分類！' : '加載物品中...'}
-            </div>
-          )}
-        </div>
-      </div>
+      
+      {/* 答案區域 */}
       <div className="flex flex-wrap justify-center items-center p-2 bg-black/30 rounded-xl gap-2 sm:gap-4">
-        {BINS.map(bin => (
-          <Bin
-            key={bin.type}
-            bin={bin}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-          />
-        ))}
+        {renderAnswerArea()}
       </div>
+      
+
+      {/* 回饋訊息 */}
+      
     </div>
   );
 };
