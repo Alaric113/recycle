@@ -13,7 +13,7 @@ function chunk(array, size) {
   );
 }
 
-const Game = ({ onGameEnd, allQuizItems, eventName, playerName: initialPlayerName }) => {
+const Game = ({ onGameEnd, onGameCancel, allQuizItems, eventName, playerName: initialPlayerName }) => {
   const [items, setItems] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -51,6 +51,14 @@ useEffect(() => {
     }
   };
 
+  const handleNameCancel = () => {
+    setShowNameModal(false);
+    setInputName('');
+    if (typeof onGameCancel === 'function') {
+      onGameCancel(); // 使用父組件提供的取消處理
+    }
+  };
+
   const handleAnswer = useCallback(
     (selectedAnswer) => {
       if (currentIdx >= items.length) return;
@@ -78,17 +86,25 @@ useEffect(() => {
   // 如果還沒開始遊戲，顯示歡迎畫面
   if (!gameStarted) {
     return (
-      <div className="flex flex-col items-center my-10 px-4">
-        <h1 className="text-3xl font-bold mb-6">準備開始測驗</h1>
-        <div className="text-lg text-gray-600 mb-8">請輸入您的姓名開始遊戲</div>
-        
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 bg-gradient-to-b from-blue-400 to-green-400">
+        <div className="w-full max-w-sm bg-white/90 rounded-2xl shadow-xl p-6 backdrop-blur-sm">
+          <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
+            準備開始測驗
+          </h1>
+          <div className="text-base sm:text-lg text-gray-600 mb-8 text-center">
+            請輸入您的姓名開始遊戲
+          </div>
+        </div>
         <CenteredModal
           isOpen={showNameModal}
-          onClose={() => {}} // 不允許關閉，必須輸入姓名
+          onClose={handleNameCancel} // 不允許關閉，必須輸入姓名
           title="請輸入您的姓名"
           onSubmit={handleNameSubmit}
           inputValue={inputName}
           setInputValue={setInputName}
+          showCancelButton={true} 
+          cancelText='取消'
+          submitText='開始遊戲'
         />
       </div>
     );
@@ -127,8 +143,7 @@ useEffect(() => {
   // 渲染答案區域
   const renderAnswerArea = () => {
     return (
-      <div className=" rounded-lg p-8 w-full max-w-2xl">
-        <h2 className="text-sm text-black mb-6 text-center">請選擇答案</h2>
+      <div className=" rounded-lg p-5 w-full max-w-2xl">
         
         {currentItem.type === QUIZ_TYPES.BIN_CLASSIFICATION ? (
           // 垃圾分類答案區 - 8個分類按鈕

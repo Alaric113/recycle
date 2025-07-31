@@ -18,13 +18,13 @@ import { useFirestoreItems } from './hooks/useFirestoreItems';
 import { StartScreen, RoundCompleteScreen } from './components/GameUI';
 import Game from './components/Game';
 import AdminPanel from './components/AdminPanel';
+import EventPanel from './components/EventPanel';
 
 /**
  * 主應用程式組件，管理遊戲的不同視圖
  */
 export default function App() {
 
-  const { eventName: urlEventName } = useParams();
   const [view, setView] = useState('start');
   const [finalScore, setFinalScore] = useState(0);
   const [db, setDb] = useState(null);
@@ -180,6 +180,11 @@ export default function App() {
       setView('start');
   }, []);
 
+  const handleGameCancel = () => {
+    setView('start'); // 回到開始畫面
+    console.log('使用者取消了遊戲');
+  };
+
   const renderView = () => {
     if (!isAuthReady || isLoadingItems) {
       return (
@@ -200,13 +205,13 @@ export default function App() {
 
     switch (view) {
       case 'playing':
-        return <Game onGameEnd={handleGameEnd} allQuizItems={quizItems}  eventName={eventName} setPlayerName={setPlayerName} playerName={playerName}/>;
+        return <Game onGameEnd={handleGameEnd} onGameCancel={handleGameCancel} allQuizItems={quizItems}  eventName={eventName} setPlayerName={setPlayerName} playerName={playerName}/>;
       case 'end':
         return <RoundCompleteScreen score={finalScore} onRestart={handleGoToStart} />;
       case 'admin':
         return <AdminPanel items={allTrashItems} db={db} appId={appId} onGoToGame={handleGoToStart} />;
       case 'admine':
-        return 
+        return <EventPanel db={db} onBackToStart={handleGoToStart}/>
       case 'start':
       default:
         return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} onGoToAdminE={handleGoToAdminE} userId={userId} db={db} setEventName={setEventName} isEventMode={isEventMode} detectedEventName={detectedEventName} />;

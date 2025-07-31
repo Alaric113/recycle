@@ -1,8 +1,8 @@
 // --- File: src/components/GameUI.js ---
 import React, { useState, useEffect } from 'react';
 import { getEventNames } from '../hooks/eventFirestore';
-import CenteredModal from './NameModel';
-import { collection, doc, setDoc } from 'firebase/firestore';
+
+
 
 /**
  * 分數顯示板組件
@@ -21,8 +21,8 @@ export const Scoreboard = ({ score, eventName }) => (
  */
 export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onGoToAdminE,isEventMode,detectedEventName }) => {
   const [eventNames, setEventNames] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newEventName, setNewEventName] = useState('');
+  
+  
   const [errorMessage, setErrorMessage] = useState('');
   const [eventName, setEventNameState] = useState(''); // 新增 eventName 狀態
 
@@ -34,20 +34,7 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
     fetchEventNames();
   }, [db]);
 
-  const handleAddEvent = async () => {
-    if (newEventName.trim() && !eventNames.includes(newEventName)) {
-      try {
-        const eventsCollectionRef = collection(db, 'events');
-        await setDoc(doc(eventsCollectionRef, newEventName), {});
-        setEventNames(prev => [...prev, newEventName]);
-        setEventNameState(newEventName); // 更新 eventName 狀態
-        setNewEventName('');
-      } catch (error) {
-        console.error('新增活動名稱失敗:', error);
-      }
-    }
-    setIsModalOpen(false);
-  };
+ 
 
   const handleStart = () => {
     if (!eventNames.includes(eventName) || !eventName.trim()) {
@@ -76,14 +63,7 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
             <option key={name} value={name}>{name}</option>
           ))}
         </select>
-        {!isEventMode && (
-          <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          新增
-        </button>
-        )}
+        
         
       </div>
 
@@ -91,15 +71,7 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
         <p className="text-red-400 mb-4 bg-black/30 p-3 rounded-xl">{errorMessage}</p>
       )}
 
-      <CenteredModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="新增活動名稱"
-        onSubmit={handleAddEvent}
-        inputValue={newEventName}
-        setInputValue={setNewEventName}
-      />
-
+      
       <button
         onClick={handleStart}
         className="px-8 py-4 bg-green-500 text-white font-bold rounded-full text-3xl shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 mb-6 border-b-4 border-green-700 hover:border-green-600"
