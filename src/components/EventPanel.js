@@ -168,7 +168,7 @@ const EventPanel = ({ db, onBackToStart }) => {
   
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gray-50 p-4 overflow-y-auto h-full">
       <div className="max-w-7xl mx-auto">
         {/* 標題列 */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -212,7 +212,7 @@ const EventPanel = ({ db, onBackToStart }) => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
           {/* 左側：活動列表 */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center">

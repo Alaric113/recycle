@@ -13,7 +13,7 @@ function chunk(array, size) {
   );
 }
 
-const Game = ({ onGameEnd, onGameCancel, allQuizItems, eventName, playerName: initialPlayerName }) => {
+const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerName: initialPlayerName }) => {
   const [items, setItems] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -36,7 +36,7 @@ useEffect(() => {
   // 加入 gameStarted 檢查，確保遊戲真的開始了才結束
   if (gameStarted && items.length > 0 && currentIdx >= items.length) {
     const timeout = setTimeout(() => {
-      onGameEnd(score, playerName); // 確保傳遞玩家姓名
+      onGameEnd(score, playerName,userId); // 確保傳遞玩家姓名
     }, feedback.show ? 1500 : 0);
     return () => clearTimeout(timeout);
   }

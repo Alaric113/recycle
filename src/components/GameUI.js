@@ -19,7 +19,7 @@ export const Scoreboard = ({ score, eventName }) => (
 /**
  * 開始畫面組件
  */
-export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onGoToAdminE,isEventMode,detectedEventName }) => {
+export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onGoToAdminE,isEventMode,detectedEventName,eventExists ,done}) => {
   const [eventNames, setEventNames] = useState([]);
   
   
@@ -34,11 +34,22 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
     fetchEventNames();
   }, [db]);
 
- 
+ useEffect(() => {
+  
+ if(isEventMode && eventExists && detectedEventName){
+    setEventNameState(detectedEventName);
+ }})
 
   const handleStart = () => {
     if (!eventNames.includes(eventName) || !eventName.trim()) {
       setErrorMessage('請選擇或新增活動名稱！');
+      return;
+    }
+    if(done && isEventMode !== 'admin'){
+      setErrorMessage('您已經完成此活動！');
+      setTimeout(() => {
+        setErrorMessage('');
+      }, 2000);
       return;
     }
     setErrorMessage('');
@@ -52,29 +63,54 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
       <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">資源回收小遊戲</h1>
       <p className="text-xl md:text-2xl text-white mb-8 drop-shadow">回答資源回收相關問題！</p>
       
+      {(isEventMode == 'admin') && (
       <div className="flex items-center gap-2 mb-4">
         <select
           className="p-2 rounded border-gray-300"
           value={eventName} // 綁定 eventName 狀態
           onChange={(e) => setEventNameState(e.target.value)} // 更新 eventName 狀態
         >
+        
           <option value="">選擇活動名稱</option>
           {eventNames.map(name => (
             <option key={name} value={name}>{name}</option>
           ))}
         </select>
-        
-        
       </div>
+      )}
+      {isEventMode && eventExists && detectedEventName && (
+          <div className="mb-6 p-4 bg-green-600/70 rounded-lg border-2 border-green-300">
+            
+            <p className="text-xl font-bold select-text">{detectedEventName}</p>
+            
+          </div>
+        )}
 
       {errorMessage && (
         <p className="text-red-400 mb-4 bg-black/30 p-3 rounded-xl">{errorMessage}</p>
       )}
+      {isEventMode =='none' && (
+          <div className="mb-6 p-4 bg-red-600/70 rounded-lg border-2 border-red-300">
+            
+            <p className="text-xl font-bold select-text">沒有此活動</p>
+            <p className="text-xl font-bold select-text">{detectedEventName}</p>
+            
+          </div>
+        )}
+
+      
 
       
       <button
         onClick={handleStart}
-        className="px-8 py-4 bg-green-500 text-white font-bold rounded-full text-3xl shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 mb-6 border-b-4 border-green-700 hover:border-green-600"
+        disabled={isEventMode === 'none'}
+        className={` px-8 py-4 text-white font-bold rounded-full text-3xl shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 mb-6 border-b-4
+    ${
+      isEventMode === 'none' 
+        ? 'bg-gray-500 border-gray-700 hover:border-gray-600' 
+        : 'bg-green-500 border-green-700 hover:border-green-600'
+    }
+  `}
       >
         開始遊戲
       </button>
@@ -88,6 +124,7 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
         </button>
         <button
           onClick={onGoToAdminE}
+          
           className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-full text-lg shadow-md hover:bg-gray-700 active:bg-gray-800 transition-all duration-200 border-b-2 border-gray-800 hover:border-gray-700"
         >
           管理活動

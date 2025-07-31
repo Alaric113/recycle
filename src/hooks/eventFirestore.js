@@ -6,8 +6,9 @@ import { collection, doc, setDoc, getDocs } from 'firebase/firestore';
  * @param {string} eventName - 活動名稱
  * @param {string} playerName - 使用者名稱
  * @param {number} score - 分數
+ * @param {string} userId - 使用者 ID
  */
-export const saveScore = async (db, eventName, playerName, score) => {
+export const saveScore = async (db, eventName, playerName, score,userId) => {
     try {
       console.log('開始儲存分數:', { eventName, playerName, score });
       
@@ -15,7 +16,8 @@ export const saveScore = async (db, eventName, playerName, score) => {
       await setDoc(doc(eventRef, playerName), { 
         score,
         timestamp: new Date(),
-        playerName // 也儲存玩家姓名作為備份
+        playerName, // 也儲存玩家姓名作為備份
+        userId // 儲存 userId
       });
       
       console.log('分數儲存成功');

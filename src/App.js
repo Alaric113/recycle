@@ -39,7 +39,7 @@ function GameApp() {
   const [detectedEventName, setDetectedEventName] = useState(null);
   const [mode, setMode] = useState('');
   const [shouldCheckEvent, setShouldCheckEvent] = useState(false);
-  const { eventExists, isChecking } = useEventValidator(db, detectedEventName, shouldCheckEvent);
+  const { eventExists, isChecking,done } = useEventValidator(db, detectedEventName, shouldCheckEvent,userId);
 
   const getEventFromPath = () => {
     if (urlEventName) {
@@ -153,10 +153,10 @@ function GameApp() {
 
   const { items: allTrashItems, isLoading: isLoadingItems } = useFirestoreItems(db, appId, isAuthReady);
 
-  const handleGameEnd = useCallback((score, playerName) => {
+  const handleGameEnd = useCallback((score, playerName,userId) => {
     setFinalScore(score);
-    if (db && eventName && playerName) {
-      saveScore(db, eventName, playerName, score);
+    if (db && eventName && playerName && userId) {
+      saveScore(db, eventName, playerName, score, userId);
     }
     setView('end');
   }, [db, eventName]);
@@ -202,31 +202,23 @@ function GameApp() {
 
     switch (view) {
       case 'playing':
-        return <Game onGameEnd={handleGameEnd} onGameCancel={handleGameCancel} allQuizItems={quizItems}  eventName={eventName} setPlayerName={setPlayerName} playerName={playerName}/>;
+        return <Game onGameEnd={handleGameEnd} onGameCancel={handleGameCancel} allQuizItems={quizItems} userId={userId} eventName={eventName} setPlayerName={setPlayerName} playerName={playerName}/>;
       case 'end':
         return <RoundCompleteScreen score={finalScore} onRestart={handleGoToStart} />;
       case 'admin':
-        return <AdminPanel items={allTrashItems} db={db} appId={appId} onGoToGame={handleGoToStart} />;
+        return <AdminPanel items={allTrashItems} db={db} appId={appId} onBackToStart={handleGoToStart} />;
       case 'admine':
         return <EventPanel db={db} onBackToStart={handleGoToStart}/>
       case 'start':
       default:
-        return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} onGoToAdminE={handleGoToAdminE} userId={userId} db={db} setEventName={setEventName} isEventMode={mode} detectedEventName={detectedEventName} />;
+        return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} onGoToAdminE={handleGoToAdminE} userId={userId} db={db} setEventName={setEventName} isEventMode={mode} detectedEventName={detectedEventName} eventExists={eventExists} done={done}/>;
     }
   };
 
   return (
     <div className="h-screen w-screen bg-gradient-to-b from-teal-500 to-cyan-800 font-sans overflow-hidden">
       {/* 開發時的除錯資訊 */}
-      {mode === 'admin' && (
-        <div className="fixed top-0 right-0 bg-black text-white p-2 text-xs z-50">
-          <div>模式: {mode =='event' ? '🎯 活動' : '📋 管理'}</div>
-          <div>活動: {detectedEventName || '無'}</div>
-          <div>存在: {eventExists ? '✅ 是' : '❌ 否'}</div>
-          <div>檢查中: {isChecking ? '⏳ 是' : '✅ 否'}</div>
-          <div>URL參數: {urlEventName || '無'}</div>
-        </div>
-      )}
+      
       
       {renderView()}
     </div>
