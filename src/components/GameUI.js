@@ -78,7 +78,7 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
       >
         開始遊戲
       </button>
-      {!isEventMode && (
+      {isEventMode==='admin' && (
         <div className="flex gap-4">
         <button
           onClick={onGoToAdmin}

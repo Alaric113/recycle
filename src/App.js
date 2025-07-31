@@ -23,8 +23,8 @@ import EventPanel from './components/EventPanel';
 /**
  * 主應用程式組件，管理遊戲的不同視圖
  */
-export default function App() {
-
+function GameApp() {
+  const { eventName: urlEventName } = useParams();
   const [view, setView] = useState('start');
   const [finalScore, setFinalScore] = useState(0);
   const [db, setDb] = useState(null);
@@ -37,26 +37,19 @@ export default function App() {
   const [eventName, setEventName] = useState('默認測驗');
   const { items: quizItems, isLoading } = useFirestoreItems(db, appId, isAuthReady);
   const [detectedEventName, setDetectedEventName] = useState(null);
-  const [isEventMode, setIsEventMode] = useState(false);
+  const [mode, setMode] = useState('');
   const [shouldCheckEvent, setShouldCheckEvent] = useState(false);
   const { eventExists, isChecking } = useEventValidator(db, detectedEventName, shouldCheckEvent);
 
   const getEventFromPath = () => {
-    const decodedPath = decodeURIComponent(window.location.pathname);
-    console.log('完整路徑:', decodedPath); // /recycle/菜園里
-    
-    // 分割路徑並提取活動名稱
-    const pathSegments = decodedPath.split('/').filter(segment => segment.trim() !== '');
-    console.log('路徑片段:', pathSegments); // ['recycle', '菜園里']
-    
-    // 檢查是否有活動名稱（第二個片段）
-    if (pathSegments.length >= 2 && pathSegments[0] === 'recycle') {
-      const activityName = pathSegments[1];
-      console.log('檢測到活動:', activityName); // 菜園里
-      return activityName;
+    if (urlEventName) {
+      
+      const decodedEventName = decodeURIComponent(urlEventName);
+      console.log('從 URL 參數檢測到活動:', decodedEventName);
+      return decodedEventName;
     }
-    
     console.log('未檢測到活動，使用一般模式');
+    setMode('none');
     return null;
   };
   useEffect(() => {
@@ -69,20 +62,24 @@ export default function App() {
       console.log(`🔍 檢測到活動，準備驗證: ${eventFromPath}`);
     } else {
       setDetectedEventName(null);
-      setIsEventMode(false);
+      setMode('none');
       setShouldCheckEvent(false);
       console.log('📋 一般管理模式');
     }
-  }, []);
+  }, [urlEventName]);
 
   useEffect(() => {
     if (!isChecking && shouldCheckEvent && detectedEventName) {
       if (eventExists) {
-        setIsEventMode(true);
+        setMode('event');
         console.log(`🎯 活動模式啟動: ${detectedEventName} (已驗證存在)`);
-      } else {
-        setIsEventMode(false);
+      }else {
+        if(detectedEventName === 'PETC'){
+          setMode('admin');
+        }else{
+        setMode('none');
         console.log(`❌ 活動不存在: ${detectedEventName}`);
+        }
       }
     }
   }, [eventExists, isChecking, shouldCheckEvent, detectedEventName]);
@@ -214,13 +211,39 @@ export default function App() {
         return <EventPanel db={db} onBackToStart={handleGoToStart}/>
       case 'start':
       default:
-        return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} onGoToAdminE={handleGoToAdminE} userId={userId} db={db} setEventName={setEventName} isEventMode={isEventMode} detectedEventName={detectedEventName} />;
+        return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} onGoToAdminE={handleGoToAdminE} userId={userId} db={db} setEventName={setEventName} isEventMode={mode} detectedEventName={detectedEventName} />;
     }
   };
 
   return (
-    <main className="h-screen w-screen bg-gradient-to-b from-teal-500 to-cyan-800 font-sans overflow-hidden">
+    <div className="h-screen w-screen bg-gradient-to-b from-teal-500 to-cyan-800 font-sans overflow-hidden">
+      {/* 開發時的除錯資訊 */}
+      {mode === 'admin' && (
+        <div className="fixed top-0 right-0 bg-black text-white p-2 text-xs z-50">
+          <div>模式: {mode =='event' ? '🎯 活動' : '📋 管理'}</div>
+          <div>活動: {detectedEventName || '無'}</div>
+          <div>存在: {eventExists ? '✅ 是' : '❌ 否'}</div>
+          <div>檢查中: {isChecking ? '⏳ 是' : '✅ 否'}</div>
+          <div>URL參數: {urlEventName || '無'}</div>
+        </div>
+      )}
+      
       {renderView()}
-    </main>
+    </div>
+  );
+}
+
+// 主 App 組件（包含路由）
+export default function App() {
+  return (
+    <BrowserRouter basename="/recycle">
+      <Routes>
+        <Route path="/" element={<GameApp/>} />
+        {/* 預設路由 - 管理模式 */}
+       
+        {/* 活動路由 - 活動模式 */}
+        <Route path="/:eventName" element={<GameApp/>} />
+      </Routes>
+    </BrowserRouter>
   );
 }

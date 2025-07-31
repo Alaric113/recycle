@@ -1,65 +1,38 @@
-.app {
-  padding: 1rem;
-  font-family: sans-serif;
+.App {
   text-align: center;
-  max-width: 100%;
 }
 
-button {
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  margin-bottom: 1rem;
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
 }
 
-.trash-zones {
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.trash-bin {
-  width: 120px;
-  height: 120px;
-  display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  font-weight: bold;
-  border-radius: 12px;
-  color: #333;
-  user-select: none;
-}
-
-.items-container {
-  display: flex;
-  flex-wrap: wrap;
   justify-content: center;
-  gap: 0.5rem;
+  font-size: calc(10px + 2vmin);
+  color: white;
 }
 
-.item {
-  background: #eee;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-weight: bold;
-  user-select: none;
-  touch-action: none;
+.App-link {
+  color: #61dafb;
 }
 
-@media (max-width: 600px) {
-  .trash-bin {
-    width: 100px;
-    height: 100px;
-    font-size: 0.9rem;
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
   }
-
-  .item {
-    padding: 0.5rem;
-    font-size: 0.85rem;
-  }
-
-  button {
-    font-size: 0.9rem;
+  to {
+    transform: rotate(360deg);
   }
 }
