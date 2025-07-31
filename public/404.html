@@ -1,22 +1,27 @@
-<!-- public/404.html -->
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
     <title>垃圾分類測驗遊戲</title>
     <script type="text/javascript">
-      // GitHub Pages SPA 重定向腳本
-      var pathSegmentsToKeep = 1; // 保留 /recycle 路徑
+      // 修正版的 GitHub Pages SPA 重定向腳本
+      var segmentCount = 1; // 保留 /recycle 路徑段數
       
       var l = window.location;
-      l.replace(
-        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + 
-        '/?' + 
-        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-        l.hash
-      );
+      var pathArray = l.pathname.split('/').slice(1); // 移除開頭的空字串
+      
+      if (pathArray.length > segmentCount) {
+        // 將額外的路徑段作為 hash 參數傳遞
+        var redirectPath = '/' + pathArray.slice(0, segmentCount).join('/') + '/';
+        var additionalPath = pathArray.slice(segmentCount).join('/');
+        
+        l.replace(
+          l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+          redirectPath + '?p=/' + additionalPath +
+          (l.search ? '&' + l.search.slice(1) : '') +
+          l.hash
+        );
+      }
     </script>
   </head>
   <body></body>
