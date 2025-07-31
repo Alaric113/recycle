@@ -236,8 +236,19 @@ const AdminPanel = ({ items, onGoToGame, db, appId }) => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">測驗題目管理</h1>
-      
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold mb-6">測驗題目管理</h1>
+        {/* 操作按鈕 */}
+        
+          <button
+            onClick={onGoToGame}
+            className="px-6 py-3 bg-green-500 text-white rounded-lg font-semibold"
+          >
+            返回
+          </button>
+        
+      </div>
+
       {/* 新增/編輯表單 */}
       <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded bg-gray-50">
         <h2 className="text-xl font-semibold mb-4">
@@ -318,16 +329,7 @@ const AdminPanel = ({ items, onGoToGame, db, appId }) => {
         )}
       </div>
 
-      {/* 操作按鈕 */}
-      <div className="flex gap-4">
-        <button
-          onClick={onGoToGame}
-          className="px-6 py-3 bg-green-500 text-white rounded-lg font-semibold"
-        >
-          返回
-        </button>
-      </div>
-
+      
       {/* Modal */}
       <Modal
         isOpen={showConfirmModal}

@@ -19,7 +19,7 @@ export const Scoreboard = ({ score, eventName }) => (
 /**
  * 開始畫面組件
  */
-export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName }) => {
+export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onGoToAdminE,isEventMode,detectedEventName }) => {
   const [eventNames, setEventNames] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEventName, setNewEventName] = useState('');
@@ -76,12 +76,15 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName }) 
             <option key={name} value={name}>{name}</option>
           ))}
         </select>
-        <button
+        {!isEventMode && (
+          <button
           onClick={() => setIsModalOpen(true)}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           新增
         </button>
+        )}
+        
       </div>
 
       {errorMessage && (
@@ -103,12 +106,23 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName }) 
       >
         開始遊戲
       </button>
-      <button
-        onClick={onGoToAdmin}
-        className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-full text-lg shadow-md hover:bg-gray-700 active:bg-gray-800 transition-all duration-200 border-b-2 border-gray-800 hover:border-gray-700"
-      >
-        管理題目
-      </button>
+      {!isEventMode && (
+        <div className="flex gap-4">
+        <button
+          onClick={onGoToAdmin}
+          className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-full text-lg shadow-md hover:bg-gray-700 active:bg-gray-800 transition-all duration-200 border-b-2 border-gray-800 hover:border-gray-700"
+        >
+          管理題目
+        </button>
+        <button
+          onClick={onGoToAdminE}
+          className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-full text-lg shadow-md hover:bg-gray-700 active:bg-gray-800 transition-all duration-200 border-b-2 border-gray-800 hover:border-gray-700"
+        >
+          管理活動
+        </button>
+        </div>
+      )}
+      
       {userId && (
         <p className="text-sm text-gray-300 mt-4">
           您的使用者 ID: <span className="font-mono text-yellow-300 break-all">{userId}</span>
@@ -123,8 +137,8 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName }) 
  */
 export const RoundCompleteScreen = ({ score, onRestart }) => (
   <div className="flex flex-col items-center justify-center h-full bg-black bg-opacity-50 text-center p-4">
-    <h2 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">分類完成！</h2>
-    <p className="text-3xl text-white mb-8 drop-shadow">總得分: {score}</p>
+    <h2 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">回答完成！</h2>
+    <p className="text-3xl text-white mb-8 drop-shadow">答對 {score/10} /10題！</p>
     <button
       onClick={onRestart}
       className="px-8 py-4 bg-blue-500 text-white font-bold rounded-full text-3xl shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 border-b-4 border-blue-700 hover:border-blue-600"

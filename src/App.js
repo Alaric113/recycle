@@ -4,6 +4,8 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { saveScore } from './hooks/eventFirestore';
+import { useEventValidator } from './hooks/useEventValidator';
+import { BrowserRouter, Routes, Route, useParams, useNavigate } from 'react-router-dom';
 /* global __app_id, __firebase_config, __initial_auth_token */
 
 // Styles
@@ -21,6 +23,8 @@ import AdminPanel from './components/AdminPanel';
  * 主應用程式組件，管理遊戲的不同視圖
  */
 export default function App() {
+
+  const { eventName: urlEventName } = useParams();
   const [view, setView] = useState('start');
   const [finalScore, setFinalScore] = useState(0);
   const [db, setDb] = useState(null);
@@ -30,9 +34,60 @@ export default function App() {
   const [appId, setAppId] = useState(null);
   const [firebaseError, setFirebaseError] = useState(null);
   const [playerName, setPlayerName] = useState('');
-  const [eventName, setEventName] = useState('');
+  const [eventName, setEventName] = useState('默認測驗');
   const { items: quizItems, isLoading } = useFirestoreItems(db, appId, isAuthReady);
+  const [detectedEventName, setDetectedEventName] = useState(null);
+  const [isEventMode, setIsEventMode] = useState(false);
+  const [shouldCheckEvent, setShouldCheckEvent] = useState(false);
+  const { eventExists, isChecking } = useEventValidator(db, detectedEventName, shouldCheckEvent);
 
+  const getEventFromPath = () => {
+    const decodedPath = decodeURIComponent(window.location.pathname);
+    console.log('完整路徑:', decodedPath); // /recycle/菜園里
+    
+    // 分割路徑並提取活動名稱
+    const pathSegments = decodedPath.split('/').filter(segment => segment.trim() !== '');
+    console.log('路徑片段:', pathSegments); // ['recycle', '菜園里']
+    
+    // 檢查是否有活動名稱（第二個片段）
+    if (pathSegments.length >= 2 && pathSegments[0] === 'recycle') {
+      const activityName = pathSegments[1];
+      console.log('檢測到活動:', activityName); // 菜園里
+      return activityName;
+    }
+    
+    console.log('未檢測到活動，使用一般模式');
+    return null;
+  };
+  useEffect(() => {
+    const eventFromPath = getEventFromPath();
+    
+    if (eventFromPath) {
+      setDetectedEventName(eventFromPath);
+      setEventName(eventFromPath);
+      setShouldCheckEvent(true); // 觸發活動驗證
+      console.log(`🔍 檢測到活動，準備驗證: ${eventFromPath}`);
+    } else {
+      setDetectedEventName(null);
+      setIsEventMode(false);
+      setShouldCheckEvent(false);
+      console.log('📋 一般管理模式');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isChecking && shouldCheckEvent && detectedEventName) {
+      if (eventExists) {
+        setIsEventMode(true);
+        console.log(`🎯 活動模式啟動: ${detectedEventName} (已驗證存在)`);
+      } else {
+        setIsEventMode(false);
+        console.log(`❌ 活動不存在: ${detectedEventName}`);
+      }
+    }
+  }, [eventExists, isChecking, shouldCheckEvent, detectedEventName]);
+
+  
   // Firebase 初始化和認證
   useEffect(() => {
     try {
@@ -101,13 +156,13 @@ export default function App() {
 
   const { items: allTrashItems, isLoading: isLoadingItems } = useFirestoreItems(db, appId, isAuthReady);
 
-  const handleGameEnd = useCallback((score) => {
+  const handleGameEnd = useCallback((score, playerName) => {
     setFinalScore(score);
     if (db && eventName && playerName) {
       saveScore(db, eventName, playerName, score);
     }
     setView('end');
-  }, [db, eventName, playerName]);
+  }, [db, eventName]);
 
   const handleRestart = useCallback(() => {
       setView('playing');
@@ -116,6 +171,10 @@ export default function App() {
   const handleGoToAdmin = useCallback(() => {
       setView('admin');
   }, []);
+
+  const handleGoToAdminE = useCallback(() => {
+      setView('admine');
+  },[]);
   
   const handleGoToStart = useCallback(() => {
       setView('start');
@@ -146,9 +205,11 @@ export default function App() {
         return <RoundCompleteScreen score={finalScore} onRestart={handleGoToStart} />;
       case 'admin':
         return <AdminPanel items={allTrashItems} db={db} appId={appId} onGoToGame={handleGoToStart} />;
+      case 'admine':
+        return 
       case 'start':
       default:
-        return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} userId={userId} db={db} setEventName={setEventName} />;
+        return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} onGoToAdminE={handleGoToAdminE} userId={userId} db={db} setEventName={setEventName} isEventMode={isEventMode} detectedEventName={detectedEventName} />;
     }
   };
 

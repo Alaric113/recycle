@@ -13,11 +13,16 @@ function chunk(array, size) {
   );
 }
 
-const Game = ({ onGameEnd, allQuizItems, eventName, playerName }) => {
+const Game = ({ onGameEnd, allQuizItems, eventName, playerName: initialPlayerName }) => {
   const [items, setItems] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState({ show: false, message: '', color: '' });
+
+  const [showNameModal, setShowNameModal] = useState(true);
+  const [playerName, setPlayerName] = useState(initialPlayerName || '');
+  const [inputName, setInputName] = useState('');
+  const [gameStarted, setGameStarted] = useState(false);
 
   useEffect(() => {
     const source = (allQuizItems && allQuizItems.length > 0) ? allQuizItems : DEFAULT_QUIZ_ITEMS;
@@ -26,14 +31,25 @@ const Game = ({ onGameEnd, allQuizItems, eventName, playerName }) => {
     setScore(0);
   }, [allQuizItems]);
 
-  useEffect(() => {
-    if (items.length > 0 && currentIdx >= items.length) {
-      const timeout = setTimeout(() => {
-        onGameEnd(score);
-      }, feedback.show ? 1500 : 0);
-      return () => clearTimeout(timeout);
+ // 修正遊戲結束的 useEffect
+useEffect(() => {
+  // 加入 gameStarted 檢查，確保遊戲真的開始了才結束
+  if (gameStarted && items.length > 0 && currentIdx >= items.length) {
+    const timeout = setTimeout(() => {
+      onGameEnd(score, playerName); // 確保傳遞玩家姓名
+    }, feedback.show ? 1500 : 0);
+    return () => clearTimeout(timeout);
+  }
+}, [currentIdx, items.length, score, onGameEnd, feedback.show, gameStarted, playerName]); // 加入 gameStarted 和 playerName 依賴
+
+
+  const handleNameSubmit = () => {
+    if (inputName.trim()) {
+      setPlayerName(inputName.trim());
+      setShowNameModal(false);
+      setGameStarted(true);
     }
-  }, [currentIdx, items.length, score, onGameEnd, feedback.show]);
+  };
 
   const handleAnswer = useCallback(
     (selectedAnswer) => {
@@ -58,6 +74,25 @@ const Game = ({ onGameEnd, allQuizItems, eventName, playerName }) => {
     },
     [currentIdx, items]
   );
+
+  // 如果還沒開始遊戲，顯示歡迎畫面
+  if (!gameStarted) {
+    return (
+      <div className="flex flex-col items-center my-10 px-4">
+        <h1 className="text-3xl font-bold mb-6">準備開始測驗</h1>
+        <div className="text-lg text-gray-600 mb-8">請輸入您的姓名開始遊戲</div>
+        
+        <CenteredModal
+          isOpen={showNameModal}
+          onClose={() => {}} // 不允許關閉，必須輸入姓名
+          title="請輸入您的姓名"
+          onSubmit={handleNameSubmit}
+          inputValue={inputName}
+          setInputValue={setInputName}
+        />
+      </div>
+    );
+  }
 
   if (!items.length || currentIdx >= items.length) {
     return <div className="flex flex-col items-center mt-24">載入中...</div>;

@@ -8,13 +8,23 @@ import { collection, doc, setDoc, getDocs } from 'firebase/firestore';
  * @param {number} score - 分數
  */
 export const saveScore = async (db, eventName, playerName, score) => {
-  try {
-    const eventRef = collection(db, `events/${eventName}/scores`);
-    await setDoc(doc(eventRef, playerName), { score });
-  } catch (error) {
-    console.error("儲存分數失敗:", error);
-  }
-};
+    try {
+      console.log('開始儲存分數:', { eventName, playerName, score });
+      
+      const eventRef = collection(db, `events/${eventName}/scores`);
+      await setDoc(doc(eventRef, playerName), { 
+        score,
+        timestamp: new Date(),
+        playerName // 也儲存玩家姓名作為備份
+      });
+      
+      console.log('分數儲存成功');
+    } catch (error) {
+      console.error("儲存分數失敗:", error);
+      throw error; // 重新拋出錯誤，讓呼叫方能處理
+    }
+  };
+  
 
 /**
  * 獲取所有活動名稱
