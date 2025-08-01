@@ -168,7 +168,7 @@ useEffect(() => {
        
         
         {/* 問題文字 */}
-        <div className="text-2xl mb-6 text-center font-medium text-gray-800">
+        <div className="text-2xl sm:text-4xl mb-6 text-center font-bold text-gray-800">
           {currentItem.question}
         </div>
         
@@ -192,16 +192,16 @@ useEffect(() => {
         
         {currentItem.type === QUIZ_TYPES.BIN_CLASSIFICATION ? (
           // 垃圾分類答案區 - 8個分類按鈕
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4 p-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4 p-1">
             {binTypes.map(type => (
               <button
                 key={type}
-                className="bg-white/30 hover:bg-blue-100 border-2 border-blue-300 rounded-lg px-2 py-3 text-xl transition flex flex-col items-center justify-between disabled:opacity-50 shadow-sm min-h-[80px] sm:min-h-[100px] md:min-h-[120px]"
+                className="bg-white/30 hover:bg-blue-100 border-2 border-blue-300 rounded-lg p-1 text-xl transition flex flex-col items-center justify-between disabled:opacity-50 shadow-sm min-h-[80px] sm:min-h-[100px] md:min-h-[120px]"
                 disabled={feedback.show}
                 onClick={() => handleAnswer(type)}
               >
-                <span className="text-2xl sm:text-3xl mb-1">{BIN_EMOJIS?.[type]}</span>
-                <span className="text-xs sm:text-sm md:text-base font-medium text-center leading-tight">{type}</span>
+                <span className="text-3xl sm:text-3xl ">{BIN_EMOJIS?.[type]}</span>
+                <span className="text-base  font-bold text-center leading-tight">{type}</span>
               </button>
             ))}
           </div>
