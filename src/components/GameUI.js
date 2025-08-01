@@ -43,6 +43,9 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
   const handleStart = () => {
     if (!eventNames.includes(eventName) || !eventName.trim()) {
       setErrorMessage('請選擇或新增活動名稱！');
+      setTimeout(() => {
+        setErrorMessage('');
+      }, 2000);
       return;
     }
     if(done && isEventMode !== 'admin' && !doCycle) {
@@ -87,7 +90,9 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
         )}
 
       {errorMessage && (
-        <p className="text-red-400 mb-4 bg-black/30 p-3 rounded-xl">{errorMessage}</p>
+        <div className='fixed bottom-20'>
+          <p className="text-red-400 mb-4 bg-black/70 p-3 rounded-xl z-100">{errorMessage}</p>
+        </div>
       )}
       {isEventMode =='none' && (
           <div className="mb-6 p-4 bg-red-600/70 rounded-lg border-2 border-red-300">

@@ -166,10 +166,10 @@ function GameApp() {
 
   const { items: allTrashItems, isLoading: isLoadingItems } = useFirestoreItems(db, appId, isAuthReady);
 
-  const handleGameEnd = useCallback((score, playerName,userId) => {
+  const handleGameEnd = useCallback((score, playerName,userId,[gender,age]) => {
     setFinalScore(score);
-    if (db && eventName && playerName && userId) {
-      saveScore(db, eventName, playerName, score, userId);
+    if (db && eventName && playerName && userId && [gender,age]) {
+      saveScore(db, eventName, playerName, score, userId,gender,age);
     }
     setView('end');
   }, [db, eventName]);
@@ -224,7 +224,7 @@ function GameApp() {
 
     switch (view) {
       case 'playing':
-        return <Game onGameEnd={handleGameEnd} onGameCancel={handleGameCancel} allQuizItems={quizItems} userId={userId} eventName={eventName} setPlayerName={setPlayerName} playerName={playerName} doCycle={doCycle} />;
+        return <Game onGameEnd={handleGameEnd} onGameCancel={handleGameCancel} allQuizItems={quizItems} userId={userId} eventName={eventName} setPlayerName={setPlayerName} playerName={playerName} doCycle={doCycle} db={db}/>;
       case 'end':
         return <RoundCompleteScreen score={finalScore} onRestart={handleGoToStart} />;
       case 'admin':

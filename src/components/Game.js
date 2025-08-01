@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Scoreboard } from './GameUI';
 import { shuffleArray } from '../utils';
-import CenteredModal from './NameModel';
+import CenteredModal from './nameModel';
+import { saveDetailedAnswer } from '../hooks/answerAnalytics';
 import { QUIZ_TYPES, ITEMS_PER_ROUND, DEFAULT_QUIZ_ITEMS, TRASH_TYPES, BIN_EMOJIS } from '../constants';
 
 const BUTTONS_PER_ROW = 4;
@@ -13,7 +14,7 @@ function chunk(array, size) {
   );
 }
 
-const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerName: initialPlayerName }) => {
+const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerName: initialPlayerName,db }) => {
   const [items, setItems] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -22,7 +23,21 @@ const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerN
   const [showNameModal, setShowNameModal] = useState(true);
   const [playerName, setPlayerName] = useState(initialPlayerName || '');
   const [inputName, setInputName] = useState('');
+  const [gender, setGender] = useState('');
+  const [age, setAge] = useState('');
   const [gameStarted, setGameStarted] = useState(false);
+  const [answerRecords, setAnswerRecords] = useState([]); // 儲存詳細答題記錄
+  const [questionStartTime, setQuestionStartTime] = useState(null);
+  const [sessionId] = useState(userId + '_' + Date.now());
+
+
+
+  useEffect(() => {
+    if (gameStarted && items.length > 0 && currentIdx < items.length) {
+      setQuestionStartTime(Date.now());
+    }
+  }, [currentIdx, gameStarted]);
+
 
   useEffect(() => {
     const source = (allQuizItems && allQuizItems.length > 0) ? allQuizItems : DEFAULT_QUIZ_ITEMS;
@@ -36,7 +51,7 @@ useEffect(() => {
   // 加入 gameStarted 檢查，確保遊戲真的開始了才結束
   if (gameStarted && items.length > 0 && currentIdx >= items.length) {
     const timeout = setTimeout(() => {
-      onGameEnd(score, playerName,userId); // 確保傳遞玩家姓名
+      onGameEnd(score, playerName,userId,[gender,age]); // 確保傳遞玩家姓名
     }, feedback.show ? 1500 : 0);
     return () => clearTimeout(timeout);
   }
@@ -60,28 +75,54 @@ useEffect(() => {
   };
 
   const handleAnswer = useCallback(
-    (selectedAnswer) => {
-      if (currentIdx >= items.length) return;
-      const curItem = items[currentIdx];
-      const correct = selectedAnswer === curItem.correctAnswer;
-      
-      setFeedback({
-        show: true,
-        message: correct 
-          ? '回答正確！+10分' 
-          : `答錯了！正確答案是：${curItem.correctAnswer}`,
-        color: correct ? 'bg-green-500' : 'bg-red-500',
-      });
-      
-      if (correct) setScore(prev => prev + 10);
-      
-      setTimeout(() => {
-        setFeedback({ show: false, message: '', color: '' });
-        setCurrentIdx(idx => idx + 1);
-      }, 1500);
-    },
-    [currentIdx, items]
-  );
+  async (selectedAnswer) => { // 加入 async
+    if (currentIdx >= items.length) return;
+
+    const curItem = items[currentIdx];
+    const correct = selectedAnswer === curItem.correctAnswer;
+    const responseTime = Date.now() - questionStartTime; // 新增
+
+    // 🆕 新增：創建答題記錄
+    const answerRecord = {
+      questionId: curItem.id || `q_${currentIdx}`,
+      question: curItem.question,
+      questionType: curItem.type,
+      userAnswer: selectedAnswer,
+      correctAnswer: curItem.correctAnswer,
+      isCorrect: correct,
+      responseTime: responseTime,
+      playerName: playerName,
+      gender: gender,
+      age: age,
+      sessionId: sessionId
+    };
+
+    // 🆕 新增：儲存到 Firestore
+    if (eventName && userId) {
+      try {
+        await saveDetailedAnswer(db, eventName, userId, answerRecord);
+        console.log('答題記錄儲存成功');
+      } catch (error) {
+        console.error('儲存失敗:', error);
+      }
+    }
+
+    // 原有的邏輯保持不變
+    setFeedback({
+      show: true,
+      message: correct ? '回答正確！+10分' : `答錯了！正確答案是：${curItem.correctAnswer}`,
+      color: correct ? 'bg-green-500' : 'bg-red-500',
+    });
+
+    if (correct) setScore(prev => prev + 10);
+
+    setTimeout(() => {
+      setFeedback({ show: false, message: '', color: '' });
+      setCurrentIdx(idx => idx + 1);
+    }, 1500);
+  },
+  [currentIdx, items, questionStartTime, db, eventName, userId, playerName, gender, age, sessionId] // 更新依賴項
+);
 
   // 如果還沒開始遊戲，顯示歡迎畫面
   if (!gameStarted) {
@@ -105,6 +146,10 @@ useEffect(() => {
           showCancelButton={true} 
           cancelText='取消'
           submitText='開始遊戲'
+          gender={gender}
+          setGender={setGender}
+          age={age}
+          setAge={setAge}
         />
       </div>
     );

@@ -287,7 +287,7 @@ const AdminPanel = ({ items, onBackToStart, db, appId }) => {
           { (!items || items.length === 0) ? (
             <p className="text-gray-500">目前沒有題目</p>
           ) : (
-            <div className="flex-1 h-full overflow-y-auto pb-15">
+            <div className="flex-1 h-full overflow-y-auto pb-20">
               {items.map(item => (
                 <div
                   key={item.id}

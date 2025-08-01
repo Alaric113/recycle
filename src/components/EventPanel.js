@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, getCountFromServer, query,setDoc,doc } from 'firebase/firestore';
-import CenteredModal from './NameModel';
+import { collection, getDocs, setDoc, doc } from 'firebase/firestore';
+import CenteredModal from './eventNameModel';
+import QuestionAnalytics from './QuestionAnalytics';
+
 const EventPanel = ({ db, onBackToStart }) => {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -9,91 +11,34 @@ const EventPanel = ({ db, onBackToStart }) => {
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [error, setError] = useState(null);
-
+  const [isLoading, setIsLoading] = useState(false);
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [newEventName, setNewEventName] = useState('');
+  const [showDetailedAnalytics, setShowDetailedAnalytics] = useState(false);
+  const [analyticsEventName, setAnalyticsEventName] = useState(null);
 
-  const generateEventUrl = (eventName,type) => {
-    const baseUrl = window.location.origin;
-    const pathname = window.location.pathname.split('/')[1]; // 獲取 'recycle'
-    if(type === 'more'){
-      return `${baseUrl}/${pathname}/${encodeURIComponent(eventName)}/cycle`;
-    }
-    return `${baseUrl}/${pathname}/${encodeURIComponent(eventName)}`;
+  const handleShowDetailedAnalytics = (eventName) => {
+    setAnalyticsEventName(eventName);
+    setShowDetailedAnalytics(true);
   };
 
-  const handleCopyUrl = async (eventName , type) => {
-    const eventUrl = generateEventUrl(eventName,type);
-    
-    try {
-      await navigator.clipboard.writeText(eventUrl);
-      alert(`活動網址已複製到剪貼簿！\n${eventUrl}`);
-    } catch (error) {
-      console.error('複製失敗:', error);
-      // 備用方案：顯示網址讓使用者手動複製
-      prompt('請手動複製以下網址:', eventUrl);
-    }
-  };
-
-  const handleGenerateQRCode = (eventName) => {
-    const eventUrl = generateEventUrl(eventName);
-    console.log('準備生成 QR Code:', eventUrl);
-    alert(`QR Code 功能開發中\n活動：${eventName}\n網址：${eventUrl}`);
-    // TODO: 後續實作 QR Code 生成功能
-  };
-  
-  const handleAddEvent = async () => {
-    if (!newEventName.trim()) {
-      alert('請輸入活動名稱');
-      return;
-    }
-
-    if (events.includes(newEventName.trim())) {
-      alert('活動名稱已存在，請使用其他名稱');
-      return;
-    }
-
-    try {
-      // 在 Firestore 中建立新活動
-      const eventsCollectionRef = collection(db, 'events');
-      await setDoc(doc(eventsCollectionRef, newEventName.trim()), {
-        createdAt: new Date(),
-        description: `${newEventName.trim()} 垃圾分類測驗活動`
-      });
-
-      // 重新載入活動列表
-      const eventsSnapshot = await getDocs(eventsCollectionRef);
-      const eventList = eventsSnapshot.docs.map(doc => doc.id);
-      setEvents(eventList);
-
-      // 清理狀態
-      setNewEventName('');
-      setShowAddEventModal(false);
-      
-      console.log(`新增活動成功: ${newEventName.trim()}`);
-      alert(`活動「${newEventName.trim()}」建立成功！`);
-    } catch (error) {
-      console.error('新增活動失敗:', error);
-      alert('新增活動失敗，請稍後再試');
-    }
-  };
+  // Corrected placement of useEffect hooks.
 
   // 獲取所有活動列表
   useEffect(() => {
     const fetchEvents = async () => {
       if (!db) return;
-      
+
       setLoadingEvents(true);
       setError(null);
-      
+
       try {
-        // 獲取 events 集合中的所有文檔（活動名稱）
         const eventsCollection = collection(db, 'events');
         const eventsSnapshot = await getDocs(eventsCollection);
-        
+
         const eventList = eventsSnapshot.docs.map(doc => doc.id);
         setEvents(eventList);
-        
+
         console.log('獲取到的活動列表:', eventList);
       } catch (error) {
         console.error('獲取活動列表失敗:', error);
@@ -108,48 +53,143 @@ const EventPanel = ({ db, onBackToStart }) => {
 
   // 獲取選中活動的參與者詳情
   useEffect(() => {
-    if (!selectedEvent || !db) {
-      setParticipants([]);
-      setParticipantCount(0);
-      return;
-    }
-
     const fetchParticipants = async () => {
-      setLoadingParticipants(true);
+      if (!db || !selectedEvent) {
+        setParticipants([]);
+        return;
+      }
+
+      setIsLoading(true);
       setError(null);
-      
+
       try {
-        // 獲取活動的分數記錄
         const scoresCollection = collection(db, `events/${selectedEvent}/scores`);
         const scoresSnapshot = await getDocs(scoresCollection);
-        
-        // 獲取參與者計數[11]
-        const countQuery = query(scoresCollection);
-        const countSnapshot = await getCountFromServer(countQuery);
-        setParticipantCount(countSnapshot.data().count);
-        
-        // 獲取參與者詳細資料
         const participantsData = scoresSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
-        
-        // 按分數排序（高到低）
-        participantsData.sort((a, b) => (b.score || 0) - (a.score || 0));
-        
         setParticipants(participantsData);
-        
-        console.log(`活動 ${selectedEvent} 參與者:`, participantsData);
+        setParticipantCount(participantsData.length);
+
+        console.log(`${selectedEvent} 的參與者:`, participantsData);
       } catch (error) {
-        console.error('獲取參與者資料失敗:', error);
-        setError('無法載入參與者資料，請稍後再試');
+        console.error('載入參與者失敗:', error);
+        setError('載入參與者失敗，請稍後再試');
+        setParticipants([]);
       } finally {
-        setLoadingParticipants(false);
+        setIsLoading(false);
       }
     };
 
     fetchParticipants();
   }, [db, selectedEvent]);
+
+  // Now, the conditional return is after the hooks
+  if (showDetailedAnalytics && analyticsEventName) {
+    return (
+      <QuestionAnalytics
+        db={db}
+        eventName={analyticsEventName}
+        onBack={() => {
+          setShowDetailedAnalytics(false);
+          setAnalyticsEventName(null);
+        }}
+      />
+    );
+  }
+
+  // Rest of your component...
+  const generateEventUrl = (eventName, type) => {
+    const baseUrl = window.location.origin;
+    const pathname = window.location.pathname.split('/')[1];
+    if (type === 'more') {
+      return `${baseUrl}/${pathname}/${encodeURIComponent(eventName)}/cycle`;
+    }
+    return `${baseUrl}/${pathname}/${encodeURIComponent(eventName)}`;
+  };
+
+  const handleCopyUrl = async (eventName, type) => {
+    const eventUrl = generateEventUrl(eventName, type);
+
+    try {
+      await navigator.clipboard.writeText(eventUrl);
+      alert(`活動網址已複製到剪貼簿！\n${eventUrl}`);
+    } catch (error) {
+      console.error('複製失敗:', error);
+      prompt('請手動複製以下網址:', eventUrl);
+    }
+  };
+
+  const handleGenerateQRCode = (eventName) => {
+    const eventUrl = generateEventUrl(eventName);
+    console.log('準備生成 QR Code:', eventUrl);
+    alert(`QR Code 功能開發中\n活動：${eventName}\n網址：${eventUrl}`);
+  };
+
+  const handleAddEvent = async () => {
+    if (!newEventName.trim()) {
+      alert('請輸入活動名稱');
+      return;
+    }
+
+    if (events.includes(newEventName.trim())) {
+      alert('活動名稱已存在，請使用其他名稱');
+      return;
+    }
+
+    try {
+      const eventsCollectionRef = collection(db, 'events');
+      await setDoc(doc(eventsCollectionRef, newEventName.trim()), {
+        createdAt: new Date(),
+        description: `${newEventName.trim()} 垃圾分類測驗活動`
+      });
+
+      const eventsSnapshot = await getDocs(eventsCollectionRef);
+      const eventList = eventsSnapshot.docs.map(doc => doc.id);
+      setEvents(eventList);
+
+      setNewEventName('');
+      setShowAddEventModal(false);
+
+      console.log(`新增活動成功: ${newEventName.trim()}`);
+      alert(`活動「${newEventName.trim()}」建立成功！`);
+    } catch (error) {
+      console.error('新增活動失敗:', error);
+      alert('新增活動失敗，請稍後再試');
+    }
+  };
+
+  const GenderIcon = ({ gender }) => {
+    const iconProps = "w-5 h-5";
+
+    switch (gender) {
+      case '男':
+        return (
+          <svg className={`${iconProps} text-blue-600`} fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 7V9L16.5 9C16.74 10.85 16.03 12.7 14.66 14.1L13.41 15.41C13.21 15.8 12.76 16 12.31 16S11.41 15.8 11.21 15.41L9.96 14.1C8.59 12.7 7.88 10.85 8.12 9L9.5 9V7L3.5 7V9L5 9C4.76 11.15 5.47 13.3 6.84 14.9L8.09 16.2C8.89 17.2 10.39 17.2 11.19 16.2L12.44 14.9C13.81 13.3 14.52 11.15 14.28 9L15.5 9L21 9Z" />
+          </svg>
+        );
+      case '女':
+        return (
+          <svg className={`${iconProps} text-pink-600`} fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM8.5 7C8.5 7 7.91 8.09 8.07 9.5C8.22 10.91 9 12 9 12L11 14H13L15 12C15 12 15.78 10.91 15.93 9.5C16.09 8.09 15.5 7 15.5 7H8.5ZM12.5 18V22H11.5V18H9V16.5C9 15.67 9.67 15 10.5 15H13.5C14.33 15 15 15.67 15 16.5V18H12.5Z" />
+          </svg>
+        );
+      case '其他':
+        return (
+          <svg className={`${iconProps} text-purple-600`} fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 4C14.21 4 16 5.79 16 8S14.21 12 12 12 8 10.21 8 8 9.79 4 12 4ZM12 14C16.42 14 20 15.79 20 18V20H4V18C4 15.79 7.58 14 12 14Z" />
+          </svg>
+        );
+      default:
+        return (
+          <svg className={`${iconProps} text-gray-600`} fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 12C14.21 12 16 10.21 16 8S14.21 4 12 4 8 5.79 8 8 9.79 12 12 12ZM12 14C9.79 14 4 15.79 4 18V20H20V18C20 15.79 14.21 14 12 14Z" />
+          </svg>
+        );
+    }
+  };
 
   const handleEventSelect = (eventName) => {
     setSelectedEvent(eventName);
@@ -158,36 +198,28 @@ const EventPanel = ({ db, onBackToStart }) => {
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return '-';
-    
-    // 處理 Firestore Timestamp 物件
     if (timestamp.seconds) {
       return new Date(timestamp.seconds * 1000).toLocaleString('zh-TW');
     }
-    
-    // 處理一般 Date 物件
     return new Date(timestamp).toLocaleString('zh-TW');
   };
-
-  
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 overflow-y-auto h-full">
       <div className="max-w-7xl mx-auto">
-        {/* 標題列 */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-800">活動管理</h1>
+            <h1 className="w-3/7 text-xl md:text-3xl font-bold text-gray-800">活動管理</h1>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowAddEventModal(true)}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+                className="w-3/5 text-sm md:text-lg px-2 py-1 sm:px-4 sm:py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
               >
-                <span>➕</span>
                 新增活動
               </button>
               <button
                 onClick={onBackToStart}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                className="w-3/5 text-sm md:text-lg px-2 py-1 sm:px-4 sm:py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
               >
                 返回首頁
               </button>
@@ -205,10 +237,9 @@ const EventPanel = ({ db, onBackToStart }) => {
           onSubmit={handleAddEvent}
           inputValue={newEventName}
           setInputValue={setNewEventName}
-            showCancelButton={true}
+          showCancelButton={true}
         />
 
-        {/* 錯誤提示 */}
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
@@ -216,13 +247,12 @@ const EventPanel = ({ db, onBackToStart }) => {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-          {/* 左側：活動列表 */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center">
-              📋 所有活動 
+              📋 所有活動
               <span className="ml-2 text-sm text-gray-500">({events.length})</span>
             </h2>
-            
+
             {loadingEvents ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
@@ -239,36 +269,38 @@ const EventPanel = ({ db, onBackToStart }) => {
                   <div
                     key={eventName}
                     onClick={() => handleEventSelect(eventName)}
-                    className={`p-3 rounded-lg cursor-pointer transition-all border-2 flex flex row justify-between ${
+                    className={`p-3 rounded-lg cursor-pointer transition-all border-2 flex flex-col items-center sm:flex-row justify-between
+                      ${
                       selectedEvent === eventName
                         ? 'bg-blue-100 border-blue-300 shadow-md'
-                        : 'bg-gray-50 border-transparent hover:bg-blue-50 hover:border-blue-200'
+                        : 'bg-black/5 border-transparent hover:bg-blue-50 hover:border-blue-200'
                     }`}
                   >
-                    <div>
-                        <div className="font-medium text-gray-800">{eventName}</div>
-                        <div className="text-sm text-gray-500 mt-1">點擊查看詳情</div>
+                    <div className='text-center sm:text-left'>
+                      <div className="font-medium text-gray-800">{eventName}</div>
+                      <div className="text-sm text-gray-500 mt-1">點擊查看詳情</div>
                     </div>
                     <div className='flex flex-row gap-2'>
-                        <button
-                        onClick={() => handleCopyUrl(eventName,'one')}
-                        className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleCopyUrl(eventName, 'one'); }}
+                        className="px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
                         title="複製活動網址"
                       >
                         <span>🔗</span>
                         <span>一次網址</span>
-                      </button><button
-                        onClick={() => handleCopyUrl(eventName,'more')}
-                        className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleCopyUrl(eventName, 'more'); }}
+                        className="px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
                         title="複製活動網址"
                       >
                         <span>🔗</span>
                         <span>重複網址</span>
                       </button>
-                      
+
                       <button
-                        onClick={() => handleGenerateQRCode(eventName)}
-                        className="flex-1 px-3 py-2 bg-purple-500 text-white text-sm rounded-md hover:bg-purple-600 transition-colors flex items-center justify-center gap-1"
+                        onClick={(e) => { e.stopPropagation(); handleGenerateQRCode(eventName); }}
+                        className="px-3 py-2 bg-purple-500 text-white text-sm rounded-md hover:bg-purple-600 transition-colors flex items-center justify-center gap-1"
                         title="生成 QR Code"
                       >
                         <span>📱</span>
@@ -276,32 +308,32 @@ const EventPanel = ({ db, onBackToStart }) => {
                       </button>
                     </div>
                   </div>
-                  
                 ))}
               </div>
             )}
           </div>
 
-          {/* 右側：活動詳情 */}
           <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">
-                {selectedEvent ? `📊 ${selectedEvent} - 參與者詳情` : '請選擇活動'}
+                {selectedEvent ? `📊 ${selectedEvent}` : '請選擇活動'}
               </h2>
-              {selectedEvent && (
-                <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                  總參與人數: {participantCount}
-                </div>
-              )}
+              
+              <button
+                onClick={() => handleShowDetailedAnalytics(selectedEvent)}
+                className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600"
+              >
+                詳細分析
+              </button>
             </div>
 
             {!selectedEvent ? (
               <div className="text-center py-12 text-gray-500">
                 <div className="text-4xl mb-4">🎯</div>
-                <p className="text-lg">請從左側列表選擇一個活動</p>
+                <p className="text-lg">請從上方列表選擇一個活動</p>
                 <p className="text-sm mt-2">選擇後可查看該活動的參與者資料與答題狀況</p>
               </div>
-            ) : loadingParticipants ? (
+            ) : isLoading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
                 <p className="mt-4 text-gray-600">載入參與者資料中...</p>
@@ -314,7 +346,6 @@ const EventPanel = ({ db, onBackToStart }) => {
               </div>
             ) : (
               <div>
-                {/* 統計資訊 */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   <div className="bg-blue-50 rounded-lg p-4 text-center">
                     <div className="text-2xl font-bold text-blue-600">{participantCount}</div>
@@ -332,49 +363,89 @@ const EventPanel = ({ db, onBackToStart }) => {
                     </div>
                     <div className="text-sm text-gray-600">最高分數</div>
                   </div>
+
                 </div>
 
-                {/* 參與者列表 */}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="border border-gray-200 p-3 font-medium text-gray-700">排名</th>
-                        <th className="border border-gray-200 p-3 font-medium text-gray-700">姓名</th>
-                        <th className="border border-gray-200 p-3 font-medium text-gray-700">分數</th>
-                        <th className="border border-gray-200 p-3 font-medium text-gray-700">完成時間</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {participants.map((participant, index) => {
-                        
-                        return (
+                <div className="bg-white rounded-lg shadow overflow-hidden">
+                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      參與者列表 ({participants.length} 人)
+                    </h3>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            參與者
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell sm:px-6">
+                            基本資料
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                            成績
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell sm:px-6">
+                            完成時間
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {participants.map(participant => (
                           <tr key={participant.id} className="hover:bg-gray-50">
-                            <td className="border border-gray-200 p-3">
+                            <td className="px-3 py-4 whitespace-nowrap sm:px-6">
                               <div className="flex items-center">
-                                {index === 0 && <span className="text-yellow-500 mr-1">🥇</span>}
-                                {index === 1 && <span className="text-gray-400 mr-1">🥈</span>}
-                                {index === 2 && <span className="text-orange-600 mr-1">🥉</span>}
-                                #{index + 1}
+                                <div className="h-8 w-8 flex-shrink-0">
+                                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <GenderIcon gender={participant.gender} />
+                                  </div>
+                                </div>
+                                <div className="ml-3">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {participant.playerName || participant.id}
+                                  </div>
+                                  <div className="sm:hidden text-xs text-gray-500">
+                                    {participant.gender || '未知'} • {participant.age || '未知'}
+                                  </div>
+                                </div>
                               </div>
                             </td>
-                            <td className="border border-gray-200 p-3 font-medium">
-                              {participant.playerName || participant.id}
+                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell sm:px-6">
+                              <div>
+                                <div>
+                                  {participant.gender}
+                                </div>
+                                <div className="text-xs">{participant.age || '未知'}</div>
+                              </div>
                             </td>
-                            <td className="border border-gray-200 p-3">
-                              <span className="text-lg font-semibold text-blue-600">
-                                {participant.score || 0}
-                              </span> 分
+                            <td className="px-3 py-4 whitespace-nowrap sm:px-6">
+                              <div className="flex flex-col sm:flex-row sm:items-center">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                  {participant.score || 0} 分
+                                </span>
+                                <div className="md:hidden text-xs text-gray-500 mt-1">
+                                  {formatTimestamp(participant.timestamp)}
+                                </div>
+                              </div>
                             </td>
-                            
-                            <td className="border border-gray-200 p-3 text-sm text-gray-600">
+                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell sm:px-6">
                               {formatTimestamp(participant.timestamp)}
                             </td>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  
+
+                  {participants.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="text-gray-500">此活動尚無參與者</div>
+                      <div className="text-sm text-gray-400 mt-1">有人開始答題後會顯示在這裡</div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
