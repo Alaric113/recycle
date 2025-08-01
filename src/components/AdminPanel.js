@@ -256,55 +256,59 @@ const AdminPanel = ({ items, onBackToStart, db, appId }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800">測驗題目管理</h1>
+    <div className="h-full min-h-screen bg-gray-50 p-4 sm:p-6 flex flex-col">
+      <div className="h-full overflow-hidden flex-1 flex max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-3 sm:p-6">
+        
+        {/* 題目列表 */}
+        <div flex-0> 
+          <div className="flex w-full justify-between items-center mb-6">
+            <h2 className="text-3xl font-semibold mb-4 text-gray-700">現有題目 ({items?.length || 0})</h2>
+        
 
         {/* 新增題目按鈕 */}
-        <div className="mb-6">
+            <div className="flex flex-col sm:flex-row">
           
-          <button
-            onClick={handleAddClick}
-            className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition"
-            aria-label="新增題目"
-          >
-            新增題目
-          </button>
-          <button
-            onClick={onBackToStart}
-            className="ml-3 px-6 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
-            aria-label="返回主畫面"
-          >
-            返回主畫面
-          </button>
+              <button
+                onClick={handleAddClick}
+                className="mb-1 sm:mb-0 sm:mr-2 px-3 py-1 sm:px-6 sm:py-3 text-sm sm:text-lg bg-green-600 text-white rounded hover:bg-green-700 transition"
+                aria-label="新增題目"
+              >
+                新增題目
+              </button>
+              <button
+                onClick={onBackToStart}
+                className=" px-3 py-1 sm:px-6 sm:py-3 text-sm sm:text-lg bg-gray-600 text-white rounded hover:bg-gray-700 transition"
+                aria-label="返回主畫面"
+              >
+                返回主畫面
+              </button>
+            </div>
         </div>
-    </div>
-        {/* 題目列表 */}
-        <div>
-          <h2 className="text-2xl font-semibold mb-4 text-gray-700">現有題目 ({items?.length || 0})</h2>
           { (!items || items.length === 0) ? (
             <p className="text-gray-500">目前沒有題目</p>
           ) : (
-            <div className="space-y-3 max-h-[600px] overflow-y-auto">
+            <div className="flex-1 h-full overflow-y-auto pb-15">
               {items.map(item => (
                 <div
                   key={item.id}
-                  className="p-4 mb-4 rounded-lg border border-gray-300 flex justify-between items-center hover:shadow-md transition-shadow cursor-pointer bg-white"
+                  className="p-4 mb-4 w-full rounded-lg border border-gray-300 flex justify-between items-center hover:shadow-md transition-shadow cursor-pointer bg-white"
                 >
-                  <div>
+                  <div className='flex flex-col w-3/4' > 
                     <span className="font-medium text-gray-900">{item.question}</span>
-                    <span className="ml-2 text-sm text-gray-500 italic">
-                      [{item.type === QUIZ_TYPES.BIN_CLASSIFICATION ? '垃圾分類題' : '選擇題'}]
-                    </span>
-                    {item.item && (
-                      <span className="ml-2 text-gray-700">
-                        {item.item.emoji} {item.item.name}
+                    <div>
+                      {item.item && (
+                          <span className="ml-2 text-gray-700">
+                            {item.item.emoji} {item.item.name} 
+                          </span>
+                        )}
+                      <span className="ml-2 text-sm text-gray-500 italic">
+                        [{item.type === QUIZ_TYPES.BIN_CLASSIFICATION ? '垃圾分類題' : '選擇題'}]
                       </span>
-                    )}
+                      
+                    </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 ml-1">
                     <button
                       onClick={() => handleEditClick(item)}
                       className="px-3 py-1 bg-yellow-400 rounded hover:bg-yellow-500 transition-colors text-sm font-semibold"

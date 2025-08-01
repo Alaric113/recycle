@@ -112,6 +112,7 @@ function GameApp() {
   
       // 驗證必要的設定項目
       if (!firebaseConfig.projectId || !firebaseConfig.apiKey) {
+        
         throw new Error("Firebase 設定不完整，請檢查環境變數。");
       }
       

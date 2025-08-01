@@ -143,41 +143,39 @@ useEffect(() => {
   // 渲染答案區域
   const renderAnswerArea = () => {
     return (
-      <div className=" rounded-lg p-5 w-full max-w-2xl">
+      <div className=" rounded-lg p-1 w-full max-w-2xl ">
         
         {currentItem.type === QUIZ_TYPES.BIN_CLASSIFICATION ? (
           // 垃圾分類答案區 - 8個分類按鈕
-          <div>
-            {chunk(binTypes, BUTTONS_PER_ROW).map((row, i) => (
-              <div key={i} className="flex justify-center mb-4">
-                {row.map(type => (
-                  <button
-                    key={type}
-                    className="flex-1 bg-white/30 hover:bg-blue-100 border-2 border-blue-300 rounded-lg px-4 py-3 mx-2 text-xl transition flex flex-col items-center disabled:opacity-50 shadow-sm"
-                    disabled={feedback.show}
-                    onClick={() => handleAnswer(type)}
-                  >
-                    <span className="text-2xl mb-1">{BIN_EMOJIS?.[type]}</span>
-                    <span className="text-sm font-medium">{type}</span>
-                  </button>
-                ))}
-              </div>
-            ))}
-          </div>
-        ) : (
-          // 選擇題答案區 - 選項按鈕
-          <div className="space-y-4">
-            {currentItem.options?.map((option, index) => (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4 p-2">
+            {binTypes.map(type => (
               <button
-                key={index}
-                className="w-full bg-white hover:bg-blue-100 border-2 border-blue-300 rounded-lg px-6 py-4 text-xl transition disabled:opacity-50 shadow-sm font-medium"
+                key={type}
+                className="bg-white/30 hover:bg-blue-100 border-2 border-blue-300 rounded-lg px-2 py-3 text-xl transition flex flex-col items-center justify-between disabled:opacity-50 shadow-sm min-h-[80px] sm:min-h-[100px] md:min-h-[120px]"
                 disabled={feedback.show}
-                onClick={() => handleAnswer(option)}
+                onClick={() => handleAnswer(type)}
               >
-                {option}
+                <span className="text-2xl sm:text-3xl mb-1">{BIN_EMOJIS?.[type]}</span>
+                <span className="text-xs sm:text-sm md:text-base font-medium text-center leading-tight">{type}</span>
               </button>
             ))}
           </div>
+
+        ) : (
+          // 選擇題答案區 - 選項按鈕
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 h-full p-2">
+            {currentItem.options?.map((option, index) => (
+              <button
+                key={index}
+                className="bg-white hover:bg-blue-100 border-2 border-blue-300 rounded-lg px-3 py-3 sm:py-4 md:py-5 text-base sm:text-lg md:text-xl transition disabled:opacity-50 shadow-sm font-medium hover:shadow-md transform hover:scale-105 min-h-[60px] sm:min-h-[70px] flex items-center justify-center text-center"
+                disabled={feedback.show}
+                onClick={() => handleAnswer(option)}
+              >
+                <span className="leading-tight">{option}</span>
+              </button>
+            ))}
+          </div>
+
         )}
       </div>
     );
@@ -186,29 +184,35 @@ useEffect(() => {
   return (
     <div className="relative w-full h-full flex flex-col justify-between p-2 sm:p-4">
       
-      <Scoreboard score={score} itemsLeft={items.length - currentIdx} eventName={eventName} />
+      <div className="flex-shrink-0 mb-6" >
+        <Scoreboard score={score} itemsLeft={items.length - currentIdx} eventName={eventName} />
+
+      </div>
       
       {/* 題目區域 */}
-      <div className="flex-grow flex items-center justify-center p-4">
+      <div className="flex-shrink-0 flex items-center justify-center p-4">
         
           {renderQuestionArea()}
         
       </div>
-      {feedback.show && (
-        <div className={`mt-8 p-4 rounded-lg text-white text-xl ${feedback.color} shadow-lg`}>
-          {feedback.message}
-        </div>
-      )}
+      
       
       {/* 答案區域 */}
-      <div className="flex flex-wrap justify-center items-center p-2 bg-black/30 rounded-xl gap-2 sm:gap-4">
+      <div className="flex flex-wrap  justify-center items-center p-2 bg-black/30 rounded-xl gap-2 sm:gap-2">
         {renderAnswerArea()}
       </div>
       
 
       {/* 回饋訊息 */}
-      
+      {feedback.show && (
+        <div className={`fixed inset-0 flex items-center justify-center`}>
+        <div className={`  p-4 rounded-lg text-white text-xl ${feedback.color} shadow-lg `}>
+          {feedback.message}
+        </div>
+        </div>
+      )}
     </div>
+    
   );
 };
 
