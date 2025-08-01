@@ -19,12 +19,15 @@ import { StartScreen, RoundCompleteScreen } from './components/GameUI';
 import Game from './components/Game';
 import AdminPanel from './components/AdminPanel';
 import EventPanel from './components/EventPanel';
+import Password from './components/Password';
 
 /**
  * 主應用程式組件，管理遊戲的不同視圖
  */
 function GameApp() {
   const { eventName: urlEventName } = useParams();
+  const { cycle: urlCycle } = useParams();
+
   const [view, setView] = useState('start');
   const [finalScore, setFinalScore] = useState(0);
   const [db, setDb] = useState(null);
@@ -40,6 +43,7 @@ function GameApp() {
   const [mode, setMode] = useState('');
   const [shouldCheckEvent, setShouldCheckEvent] = useState(false);
   const { eventExists, isChecking,done } = useEventValidator(db, detectedEventName, shouldCheckEvent,userId);
+  const [ doCycle, setDoCycle] = useState(false);
 
   const getEventFromPath = () => {
     if (urlEventName) {
@@ -54,6 +58,11 @@ function GameApp() {
   };
   useEffect(() => {
     const eventFromPath = getEventFromPath();
+
+    if (urlCycle === 'cycle') {
+      console.log(`檢測到循環參數: ${urlCycle}`);
+      setDoCycle(true);
+    }
     
     if (eventFromPath) {
       setDetectedEventName(eventFromPath);
@@ -74,7 +83,7 @@ function GameApp() {
         setMode('event');
         console.log(`🎯 活動模式啟動: ${detectedEventName} (已驗證存在)`);
       }else {
-        if(detectedEventName === 'PETC'){
+        if(detectedEventName === 'Admin'){
           setMode('admin');
         }else{
         setMode('none');
@@ -172,6 +181,10 @@ function GameApp() {
   const handleGoToAdminE = useCallback(() => {
       setView('admine');
   },[]);
+
+  const handleGoToAdminPage = useCallback(() => {
+    setView('password');
+},[]);
   
   const handleGoToStart = useCallback(() => {
       setView('start');
@@ -181,6 +194,11 @@ function GameApp() {
     setView('start'); // 回到開始畫面
     console.log('使用者取消了遊戲');
   };
+
+  const handleAuthenticated=() => {
+    setMode('admin');
+    setView('start');
+  }
 
   const renderView = () => {
     if (!isAuthReady || isLoadingItems) {
@@ -202,16 +220,18 @@ function GameApp() {
 
     switch (view) {
       case 'playing':
-        return <Game onGameEnd={handleGameEnd} onGameCancel={handleGameCancel} allQuizItems={quizItems} userId={userId} eventName={eventName} setPlayerName={setPlayerName} playerName={playerName}/>;
+        return <Game onGameEnd={handleGameEnd} onGameCancel={handleGameCancel} allQuizItems={quizItems} userId={userId} eventName={eventName} setPlayerName={setPlayerName} playerName={playerName} doCycle={doCycle} />;
       case 'end':
         return <RoundCompleteScreen score={finalScore} onRestart={handleGoToStart} />;
       case 'admin':
         return <AdminPanel items={allTrashItems} db={db} appId={appId} onBackToStart={handleGoToStart} />;
       case 'admine':
         return <EventPanel db={db} onBackToStart={handleGoToStart}/>
+      case 'password':
+        return <Password onClose={handleGoToStart} onAuthenticated={handleAuthenticated}/>
       case 'start':
       default:
-        return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} onGoToAdminE={handleGoToAdminE} userId={userId} db={db} setEventName={setEventName} isEventMode={mode} detectedEventName={detectedEventName} eventExists={eventExists} done={done}/>;
+        return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} onGoToAdminE={handleGoToAdminE} userId={userId} db={db} setEventName={setEventName} isEventMode={mode} detectedEventName={detectedEventName} eventExists={eventExists} done={done} doCycle={doCycle} onGoToAdminPage={handleGoToAdminPage}/>;
     }
   };
 
@@ -235,6 +255,7 @@ export default function App() {
        
         {/* 活動路由 - 活動模式 */}
         <Route path="/:eventName" element={<GameApp/>} />
+        <Route path="/:eventName/:cycle" element={<GameApp/>} />
       </Routes>
     </BrowserRouter>
   );

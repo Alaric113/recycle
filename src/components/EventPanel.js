@@ -13,14 +13,17 @@ const EventPanel = ({ db, onBackToStart }) => {
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [newEventName, setNewEventName] = useState('');
 
-  const generateEventUrl = (eventName) => {
+  const generateEventUrl = (eventName,type) => {
     const baseUrl = window.location.origin;
     const pathname = window.location.pathname.split('/')[1]; // 獲取 'recycle'
+    if(type === 'more'){
+      return `${baseUrl}/${pathname}/${encodeURIComponent(eventName)}/cycle`;
+    }
     return `${baseUrl}/${pathname}/${encodeURIComponent(eventName)}`;
   };
 
-  const handleCopyUrl = async (eventName) => {
-    const eventUrl = generateEventUrl(eventName);
+  const handleCopyUrl = async (eventName , type) => {
+    const eventUrl = generateEventUrl(eventName,type);
     
     try {
       await navigator.clipboard.writeText(eventUrl);
@@ -248,12 +251,19 @@ const EventPanel = ({ db, onBackToStart }) => {
                     </div>
                     <div className='flex flex-row gap-2'>
                         <button
-                        onClick={() => handleCopyUrl(eventName)}
+                        onClick={() => handleCopyUrl(eventName,'one')}
                         className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
                         title="複製活動網址"
                       >
                         <span>🔗</span>
-                        <span>網址</span>
+                        <span>一次網址</span>
+                      </button><button
+                        onClick={() => handleCopyUrl(eventName,'more')}
+                        className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
+                        title="複製活動網址"
+                      >
+                        <span>🔗</span>
+                        <span>重複網址</span>
                       </button>
                       
                       <button

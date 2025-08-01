@@ -19,7 +19,7 @@ export const Scoreboard = ({ score, eventName }) => (
 /**
  * 開始畫面組件
  */
-export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onGoToAdminE,isEventMode,detectedEventName,eventExists ,done}) => {
+export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onGoToAdminE,isEventMode,detectedEventName,eventExists ,done,doCycle,onGoToAdminPage}) => {
   const [eventNames, setEventNames] = useState([]);
   
   
@@ -45,7 +45,7 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
       setErrorMessage('請選擇或新增活動名稱！');
       return;
     }
-    if(done && isEventMode !== 'admin'){
+    if(done && isEventMode !== 'admin' && !doCycle) {
       setErrorMessage('您已經完成此活動！');
       setTimeout(() => {
         setErrorMessage('');
@@ -114,7 +114,7 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
       >
         開始遊戲
       </button>
-      {isEventMode==='admin' && (
+      {isEventMode ==='admin' && (
         <div className="flex gap-4">
         <button
           onClick={onGoToAdmin}
@@ -130,6 +130,15 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
           管理活動
         </button>
         </div>
+      )}
+
+      {isEventMode !== 'admin' && (
+        <button
+        onClick={onGoToAdminPage}
+        className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-full text-lg shadow-md hover:bg-gray-700 active:bg-gray-800 transition-all duration-200 border-b-2 border-gray-800 hover:border-gray-700"
+      >
+        進入管理
+      </button>
       )}
       
       {userId && (

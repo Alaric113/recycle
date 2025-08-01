@@ -1,5 +1,5 @@
 // --- File: src/hooks/useEventValidator.js ---
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { collection, query, where, getDocs, limit,doc,getDoc } from 'firebase/firestore';
 
 /**
@@ -35,10 +35,11 @@ export const useEventValidator = (db, eventName, shouldCheck = false,userIdd) =>
         
         const partSnap = await getDocs(scoresCollectionRef);
         const ids = partSnap.docs.map(doc => doc.data().userId)
-        
+        console.log(ids)
         
         if (ids.includes(userIdd)) {
           setDone(true);
+          console.log(ids.includes(userIdd))
         } else {
           setDone(false);
         }
@@ -52,7 +53,7 @@ export const useEventValidator = (db, eventName, shouldCheck = false,userIdd) =>
     };
 
     checkEventExists();
-  }, [db, eventName, shouldCheck,userIdd]);
+  }, [db, eventName, shouldCheck,userIdd,done]);
 
   return { eventExists, isChecking ,done};
 };
