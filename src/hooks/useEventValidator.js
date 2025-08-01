@@ -31,7 +31,7 @@ export const useEventValidator = (db, eventName, shouldCheck = false,userIdd) =>
         const eventDocRef = doc(db, 'events/', eventName);
         const eventDocSnap = await getDoc(eventDocRef);
         setEventExists(eventDocSnap.exists());
-        const scoresCollectionRef = collection(db, 'events', eventName, 'scores'); // collection, doc, collection
+        const scoresCollectionRef = collection(db, 'events', eventName, 'users'); // collection, doc, collection
         
         const partSnap = await getDocs(scoresCollectionRef);
         const ids = partSnap.docs.map(doc => doc.data().userId)

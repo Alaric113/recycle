@@ -5,7 +5,7 @@
  */
 export const processQuestionAnalytics = (answers) => {
     const questionStats = {};
-    console.log(answers);
+    
     answers.forEach(answer => {
       if (!questionStats[answer.questionId]) {
         questionStats[answer.questionId] = {
@@ -85,6 +85,7 @@ export const processQuestionAnalytics = (answers) => {
         userDetails[score.userId] = {
           ...userDetails[score.userId],
           finalScore: score.score,
+          score: score.score,
           completedAt: score.timestamp
         };
       }

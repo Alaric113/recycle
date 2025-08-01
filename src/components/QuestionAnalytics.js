@@ -67,17 +67,24 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
         break;
     }
   };
+  
 
   // 總覽統計
   const overviewStats = {
     totalParticipants: userDetails.length,
     totalQuestions: questionAnalytics.length,
+    
+    // 🔧 修正：這應該是平均分數，不是平均正確率
     averageScore: userDetails.length > 0 ? 
-      (userDetails.reduce((sum, u) => sum + (u.finalScore || 0), 0) / userDetails.length).toFixed(1) : 0,
+      (userDetails.reduce((sum, u) => sum + (u.score || 0), 0) / userDetails.length).toFixed(1) : 0,
+      
+    // 🔧 新增：真正的平均正確率
+    averageCorrectRate: userDetails.length > 0 ? 
+      (userDetails.reduce((sum, u) => sum + (parseFloat(u.correctRate) || 0), 0) / userDetails.length).toFixed(1) : 0,
+      
     overallCorrectRate: answers.length > 0 ? 
       (answers.filter(a => a.isCorrect).length / answers.length * 100).toFixed(1) : 0
   };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">

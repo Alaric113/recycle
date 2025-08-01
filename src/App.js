@@ -190,9 +190,41 @@ function GameApp() {
     setView('password');
 },[]);
   
-  const handleGoToStart = useCallback(() => {
-      setView('start');
-  }, []);
+const handleGoToStart = useCallback(async () => {
+  try {
+    // 檢查是否為特殊模式需要刷新 UID
+    const shouldRefreshUID = urlCycle === 'cycle' || mode === 'admin' || detectedEventName === 'Admin';
+    
+    if (shouldRefreshUID && auth) {
+      console.log(`🔄 檢測到 ${urlCycle === 'cycle' ? 'cycle' : 'admin'} 模式，刷新 UID`);
+      
+      // 登出現有用戶
+      if (auth.currentUser) {
+        await auth.signOut();
+        console.log('已登出用戶:', auth.currentUser?.uid);
+      }
+      
+      // 強制創建新的匿名用戶
+      const userCredential = await signInAnonymously(auth);
+      const newUID = userCredential.user.uid;
+      setUserId(newUID);
+      
+      console.log('🆕 遊戲結束後生成新 UID:', newUID);
+      
+      // 重置遊戲狀態
+      setFinalScore(0);
+      setPlayerName('');
+    }
+    
+    setView('start');
+    
+  } catch (error) {
+    console.error('返回主畫面時刷新 UID 失敗:', error);
+    // 即使刷新失敗也要回到主畫面
+    setView('start');
+  }
+}, [urlCycle, mode, detectedEventName, auth]);
+
 
   const handleGameCancel = () => {
     setView('start'); // 回到開始畫面

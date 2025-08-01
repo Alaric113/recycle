@@ -1,4 +1,4 @@
-import { collection, doc, setDoc, getDocs } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs,addDoc } from 'firebase/firestore';
 
 /**
  * 儲存使用者分數到 Firestore
@@ -12,8 +12,8 @@ export const saveScore = async (db, eventName, playerName, score,userId,gender,a
     try {
       console.log('開始儲存分數:', { eventName, playerName, score ,gender, age});
       
-      const eventRef = collection(db, `events/${eventName}/scores`);
-      await setDoc(doc(eventRef, playerName), { 
+      const eventRef = collection(db, `events/${eventName}/users`);
+      await setDoc(doc(eventRef, userId), { 
         score,
         timestamp: new Date(),
         playerName, // 也儲存玩家姓名作為備份

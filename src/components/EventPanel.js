@@ -63,8 +63,8 @@ const EventPanel = ({ db, onBackToStart }) => {
       setError(null);
 
       try {
-        const scoresCollection = collection(db, `events/${selectedEvent}/scores`);
-        const scoresSnapshot = await getDocs(scoresCollection);
+        const usersCollection = collection(db, `events/${selectedEvent}/users`);
+        const scoresSnapshot = await getDocs(usersCollection);
         const participantsData = scoresSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()

@@ -6,7 +6,8 @@ import { collection, doc, setDoc, getDocs, addDoc, onSnapshot, query, orderBy, w
  */
 export const saveDetailedAnswer = async (db, eventName, userId, answerData) => {
   try {
-    const answerRef = collection(db, `events/${eventName}/detailed_answers`);
+    // 🔧 修正路徑：events/{eventName}/users/{userId}/detailed_answers
+    const answerRef = collection(db, `events/${eventName}/users/${userId}/detailed_answers`);
     await addDoc(answerRef, {
       userId,
       playerName: answerData.playerName,
@@ -20,8 +21,9 @@ export const saveDetailedAnswer = async (db, eventName, userId, answerData) => {
       isCorrect: answerData.isCorrect,
       responseTime: answerData.responseTime,
       timestamp: new Date(),
-      sessionId: answerData.sessionId // 用於追蹤同一次答題
+      sessionId: answerData.sessionId
     });
+    console.log('答題記錄儲存成功');
   } catch (error) {
     console.error("儲存詳細答題記錄失敗:", error);
     throw error;
@@ -32,29 +34,63 @@ export const saveDetailedAnswer = async (db, eventName, userId, answerData) => {
  * 即時監聽答題分析數據
  */
 export const subscribeToAnalytics = (db, eventName, callback) => {
-    console.log('訂閱答題分析數據:', eventName,callback);
-  const answersQuery = query(
-    collection(db, `events/${eventName}/detailed_answers`),
-    orderBy('timestamp', 'desc')
-  );
   
+  
+  const getAnswersFromAllUsers = async () => {
+    try {
+      // 先獲取所有參與者的 userId
+      const scoresCollection = collection(db, `events/${eventName}/users`);
+      
+      const scoresSnapshot = await getDocs(scoresCollection);
+      const userIds = scoresSnapshot.docs.map(doc => doc.id);
+      
+      // 收集所有用戶的答題記錄
+      const allAnswers = [];
+      for (const userId of userIds) {
+        // 🔧 修正路徑：加入 users 層級
+        const userAnswersCollection = collection(db, `events/${eventName}/users/${userId}/detailed_answers`);
+        const userAnswersSnapshot = await getDocs(userAnswersCollection);
+        const userAnswers = userAnswersSnapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          ...doc.data() 
+        }));
+        allAnswers.push(...userAnswers);
+      }
+      
+      // 按時間排序
+      allAnswers.sort((a, b) => {
+        const timeA = a.timestamp?.toMillis?.() || a.timestamp?.getTime?.() || 0;
+        const timeB = b.timestamp?.toMillis?.() || b.timestamp?.getTime?.() || 0;
+        return timeB - timeA;
+      });
+      callback({ type: 'answers', data: allAnswers });
+      
+    } catch (error) {
+      console.error('獲取答題記錄失敗:', error);
+      callback({ type: 'answers', data: [] });
+    }
+  };
+
+  // 監聽分數變化
   const scoresQuery = query(
     collection(db, `events/${eventName}/scores`),
     orderBy('timestamp', 'desc')
   );
 
-  const unsubscribeAnswers = onSnapshot(answersQuery, (snapshot) => {
-    const answers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    callback({ type: 'answers', data: answers });
-  });
-
   const unsubscribeScores = onSnapshot(scoresQuery, (snapshot) => {
     const scores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     callback({ type: 'scores', data: scores });
+    console.log('分數更新:', scores);
+    
+    // 當分數更新時，重新獲取所有答題記錄
+    getAnswersFromAllUsers();
   });
 
+  // 初始載入
+  getAnswersFromAllUsers();
+
   return () => {
-    unsubscribeAnswers();
+    console.log(unsubscribeScores())
     unsubscribeScores();
   };
 };
