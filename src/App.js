@@ -98,67 +98,70 @@ function GameApp() {
   useEffect(() => {
     try {
       // 安全地讀取環境變數，並提供後備值
-      const currentAppId = typeof __app_id !== 'undefined' ? __app_id : 'recycle-76cf4';
+      
       
       // 提供一個後備的 Firebase 設定物件，以避免在本地開發時出錯
-      const defaultConfig = {
-        apiKey: "AIzaSyDUkrkOvDABCV0Ug1suZGmf43NuMDFeuI0", 
-        authDomain: "recycle-76cf4.firebaseapp.com",
-        projectId: "recycle-76cf4", // 至少需要 projectId
-        storageBucket: "recycle-76cf4.firebasestorage.app",
-        messagingSenderId: "1037683276646",
-        appId: "1:1037683276646:web:4e6449de76ee8bf29b26a7"
+      const firebaseConfig = {
+        apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+        authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+        projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+        storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+        appId: process.env.REACT_APP_FIREBASE_APP_ID
       };
-      
-      const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : JSON.stringify(defaultConfig);
-      const firebaseConfig = JSON.parse(firebaseConfigStr);
-      
-      if (!firebaseConfig.projectId) {
-        throw new Error("Firebase 設定中缺少 projectId。");
+  
+      // 驗證必要的設定項目
+      if (!firebaseConfig.projectId || !firebaseConfig.apiKey) {
+        throw new Error("Firebase 設定不完整，請檢查環境變數。");
       }
-
+      
+      const currentAppId = process.env.REACT_APP_APP_ID || 'recycle-76cf4';
       setAppId(currentAppId);
+
+      
       const app = initializeApp(firebaseConfig);
-      const firestore = getFirestore(app);
-      const authInstance = getAuth(app);
-      setDb(firestore);
-      setAuth(authInstance);
+    const firestore = getFirestore(app);
+    const authInstance = getAuth(app);
 
-      // 監聽認證狀態
-      const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
-        if (user) {
-          setUserId(user.uid);
+    setDb(firestore);
+    setAuth(authInstance);
+
+    // 監聽認證狀態
+    const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
+      if (user) {
+        setUserId(user.uid);
+        setIsAuthReady(true);
+      } else {
+        try {
+          // 讀取認證 token
+          const token = process.env.REACT_APP_INITIAL_AUTH_TOKEN;
+          
+          if (token) {
+            await signInWithCustomToken(authInstance, token);
+          } else {
+            await signInAnonymously(authInstance);
+          }
+
+          const currentUser = authInstance.currentUser;
+          if (currentUser) {
+            setUserId(currentUser.uid);
+          }
           setIsAuthReady(true);
-        } else {
-            try {
-                // 安全地讀取 token，若不存在則為 null
-                const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                if (token) {
-                    await signInWithCustomToken(authInstance, token);
-                } else {
-                    await signInAnonymously(authInstance);
-                }
-                // 更新用戶狀態
-                const currentUser = authInstance.currentUser;
-                if(currentUser){
-                    setUserId(currentUser.uid);
-                }
-                setIsAuthReady(true);
-            } catch (authError) {
-                console.error("Firebase 登入失敗:", authError);
-                setFirebaseError("無法登入，請檢查您的網路連線或稍後再試。");
-                setIsAuthReady(true);
-            }
+        } catch (authError) {
+          console.error("Firebase 登入失敗:", authError);
+          setFirebaseError("無法登入，請檢查您的網路連線或稍後再試。");
+          setIsAuthReady(true);
         }
-      });
+      }
+    });
 
-      return () => unsubscribe();
-    } catch (error) {
-      console.error("Firebase 初始化失敗:", error);
-      setFirebaseError("應用程式初始化失敗，請檢查您的 Firebase 設定。");
-      setIsAuthReady(true);
-    }
-  }, []);
+    return () => unsubscribe();
+  } catch (error) {
+    console.error("Firebase 初始化失敗:", error);
+    setFirebaseError("應用程式初始化失敗，請檢查您的 Firebase 設定。");
+    setIsAuthReady(true);
+  }
+}, []);
 
   const { items: allTrashItems, isLoading: isLoadingItems } = useFirestoreItems(db, appId, isAuthReady);
 
