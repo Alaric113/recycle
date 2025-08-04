@@ -14,6 +14,7 @@ const EventPanel = ({ db, onBackToStart }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [newEventName, setNewEventName] = useState('');
+  const [numQuestions, setNumQuestions] = useState(5); // 新增：題目數量狀態
   const [showDetailedAnalytics, setShowDetailedAnalytics] = useState(false);
   const [analyticsEventName, setAnalyticsEventName] = useState(null);
 
@@ -237,6 +238,8 @@ const EventPanel = ({ db, onBackToStart }) => {
           onSubmit={handleAddEvent}
           inputValue={newEventName}
           setInputValue={setNewEventName}
+          inputQValue={numQuestions}
+          setInputQValue={setNumQuestions}
           showCancelButton={true}
         />
 

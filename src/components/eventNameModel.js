@@ -7,6 +7,8 @@ const CenteredModal = ({
   onSubmit, 
   inputValue, 
   setInputValue,
+  inputQValue,
+  setInputQValue,
   showCancelButton = false, // 新增：是否顯示取消按鈕
   cancelText = "取消",
   submitText = "確認"
@@ -20,6 +22,7 @@ const CenteredModal = ({
 
   const handleCancel = () => {
     setInputValue(''); // 清空輸入值
+    setInputQValue(''); // 清空題目數量輸入值
     onClose(); // 關閉 modal
   };
 
@@ -31,7 +34,7 @@ const CenteredModal = ({
         </h3>
         
         <form onSubmit={handleSubmit}>
-          <div className="mb-6">
+          <div className="mb-6 text-center" >
             <input
               type="text"
               value={inputValue}
@@ -39,6 +42,18 @@ const CenteredModal = ({
               placeholder="請輸入..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-lg sm:text-md"
               autoFocus
+            />
+            <label className="text-sm text-gray-600 mt-2 =">
+              請輸入題目數量
+            </label>
+          
+            <input
+              type="number"
+              value={inputQValue || 5}
+              onChange={(e) => setInputQValue(e.target.value)}
+              placeholder="請輸入..."
+              className="w-full px-4 py-3 mt-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-lg sm:text-md"
+              
             />
           </div>
 

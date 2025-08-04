@@ -30,7 +30,7 @@ export const QUIZ_TYPES = {
 };
 
 // 遊戲設定
-export const ITEMS_PER_ROUND = 10;
+export const ITEMS_PER_ROUND = 3;
 
 // 預設測驗題目
 export const DEFAULT_QUIZ_ITEMS = [

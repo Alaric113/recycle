@@ -196,11 +196,11 @@ useEffect(() => {
             {binTypes.map(type => (
               <button
                 key={type}
-                className="bg-white/30 hover:bg-blue-100 border-2 border-blue-300 rounded-lg p-1 text-xl transition flex flex-col items-center justify-between disabled:opacity-50 shadow-sm min-h-[80px] sm:min-h-[100px] md:min-h-[120px]"
+                className="bg-white/30 hover:bg-blue-100 border-2 border-blue-300 rounded-lg p-1 text-xl transition flex flex-col items-center justify-center disabled:opacity-50 shadow-sm min-h-[80px] sm:min-h-[100px] md:min-h-[120px]"
                 disabled={feedback.show}
                 onClick={() => handleAnswer(type)}
               >
-                <span className="text-3xl sm:text-3xl ">{BIN_EMOJIS?.[type]}</span>
+                <span className="text-3xl sm:text-4xl md:text-5xl mb-1">{BIN_EMOJIS?.[type]}</span>
                 <span className="text-base  font-bold text-center leading-tight">{type}</span>
               </button>
             ))}

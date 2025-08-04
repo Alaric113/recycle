@@ -1,6 +1,7 @@
 // --- File: src/components/GameUI.js ---
 import React, { useState, useEffect } from 'react';
 import { getEventNames } from '../hooks/eventFirestore';
+import { ITEMS_PER_ROUND } from '../constants';
 
 
 
@@ -161,7 +162,7 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
 export const RoundCompleteScreen = ({ score, onRestart }) => (
   <div className="flex flex-col items-center justify-center h-full bg-black bg-opacity-50 text-center p-4">
     <h2 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">回答完成！</h2>
-    <p className="text-3xl text-white mb-8 drop-shadow">答對 {score/10} /10題！</p>
+    <p className="text-3xl text-white mb-8 drop-shadow">答對 {score/10} / {ITEMS_PER_ROUND} 題</p>
     <button
       onClick={onRestart}
       className="px-8 py-4 bg-blue-500 text-white font-bold rounded-full text-3xl shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 border-b-4 border-blue-700 hover:border-blue-600"
