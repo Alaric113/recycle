@@ -49,8 +49,8 @@ const CenteredModal = ({
           
             <input
               type="number"
-              value={inputQValue || 5}
-              onChange={(e) => setInputQValue(e.target.value)}
+              value={inputQValue}
+              onChange={(e) => setInputQValue(parseInt(e.target.value))}
               placeholder="請輸入..."
               className="w-full px-4 py-3 mt-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-lg sm:text-md"
               
