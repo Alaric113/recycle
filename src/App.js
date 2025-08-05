@@ -258,7 +258,7 @@ const handleGoToStart = useCallback(async () => {
     
     switch (view) {
       case 'playing':
-        console.log('開始遊戲，題數', questionNum);
+        
         return <Game onGameEnd={handleGameEnd} onGameCancel={handleGameCancel} allQuizItems={quizItems} userId={userId} eventName={eventName} setPlayerName={setPlayerName} playerName={playerName} doCycle={doCycle} db={db} questionNum={questionNum}/>;
       case 'end':
         

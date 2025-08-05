@@ -50,7 +50,7 @@ export const useGetEventQNUM = (db, eventName) => {
       const eventDocRef = doc(db, 'events', eventName);
       const snap = await getDoc(eventDocRef);
       if (snap.exists()) {
-        console.log(snap.data().questionNum)
+        
         setQuestionNum(snap.data().questionNum);
       }
     };

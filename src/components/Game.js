@@ -136,15 +136,8 @@ useEffect(() => {
   // 如果還沒開始遊戲，顯示歡迎畫面
   if (!gameStarted) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 bg-gradient-to-b from-blue-400 to-green-400">
-        <div className="w-full max-w-sm bg-white/90 rounded-2xl shadow-xl p-6 backdrop-blur-sm">
-          <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
-            準備開始測驗
-          </h1>
-          <div className="text-base sm:text-lg text-gray-600 mb-8 text-center">
-            請輸入您的姓名開始遊戲
-          </div>
-        </div>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8 bg-gradient-to-b from-blue-400 to-green-400">
+        
         <CenteredModal
           isOpen={showNameModal}
           onClose={handleNameCancel} // 不允許關閉，必須輸入姓名
