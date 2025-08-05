@@ -31,7 +31,7 @@ const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerN
   const [sessionId] = useState(userId + '_' + Date.now());
 
 
-  console.log(playerName)
+  
   useEffect(() => {
     if (gameStarted && items.length > 0 && currentIdx < items.length) {
       setQuestionStartTime(Date.now());
@@ -110,7 +110,7 @@ useEffect(() => {
     // 原有的邏輯保持不變
     setFeedback({
       show: true,
-      message: correct ? '回答正確！+10分' : `答錯了！正確答案是：${curItem.correctAnswer}`,
+      message: correct ? '回答正確！' : `答錯了！正確答案是：${curItem.correctAnswer}`,
       color: correct ? 'bg-green-500' : 'bg-red-500',
     });
 

@@ -19,7 +19,10 @@ export const useEventValidator = (db, eventName, shouldCheck, uid) => {
     const eventDocRef = doc(db, 'events', eventName);
     getDoc(eventDocRef).then(snap => {
       setEventExists(snap.exists());
-      setQuestionNum(snap.data().questionNum)
+      if (snap.exists()) {
+        setQuestionNum(snap.data().questionNum)
+      }
+      
     });
 
     // 2️⃣ 即時監聽「這個使用者」的成績文件

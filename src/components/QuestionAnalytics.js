@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { subscribeToAnalytics } from '../hooks/answerAnalytics';
 import { processQuestionAnalytics, processUserDetails, processGenderAgeAnalysis } from '../utils/analyticsProcessor';
 import { BarChart, PieChart, StatsCard } from './AnalyticsCharts';
-import { exportToCSV, exportToPDF } from '../utils/exportUtils';
+import { exportToCSV, exportParticipantsToPDF  } from '../utils/exportUtils';
 
 const QuestionAnalytics = ({ db, eventName, onBack }) => {
   const [answers, setAnswers] = useState([]);
@@ -54,20 +54,21 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
   });
 
   // 匯出功能
-  const handleExportCSV = (dataType) => {
-    switch (dataType) {
-      case 'questions':
-        exportToCSV(questionAnalytics, `${eventName}_題目分析`, [
-          'question', 'correctRate', 'totalAnswers', 'averageResponseTime', 'difficulty'
-        ]);
-        break;
-      case 'users':
-        exportToCSV(filteredUserDetails, `${eventName}_使用者分析`, [
-          'playerName', 'gender', 'age', 'finalScore', 'correctRate', 'averageResponseTime'
-        ]);
-        break;
-    }
-  };
+ // 片段 – 匯出功能
+
+
+const handleExport = (type) => {
+  if (type === 'csv') {
+    exportToCSV(
+      filteredUserDetails,
+      `${eventName}_參與者`,
+      ['playerName', 'gender', 'age', 'score', 'timestamp']
+    );
+  } else if (type === 'pdf') {
+    exportParticipantsToPDF(filteredUserDetails, eventName);   // ✅
+  }
+};
+
   
 
   // 總覽統計
@@ -104,8 +105,8 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
             <h1 className="text-lg md:text-2xl font-bold text-gray-800">答題分析 - {eventName}</h1>
             <div className="flex space-x-2">
               <button
-                onClick={() => exportToPDF('analytics-content', `${eventName}_分析報告`)}
-                className="px-2 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-xs md:text-sm transition-colors flex items-center justify-center gap-1"
+                onClick={() => handleExport('pdf')}
+                className="hidden px-2 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-xs md:text-sm transition-colors flex items-center justify-center gap-1"
               >
                 匯出PDF
               </button>
@@ -226,8 +227,8 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">題目分析詳情</h2>
                 <button
-                  onClick={() => handleExportCSV('questions')}
-                  className="px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+                  onClick={() => handleExport('csv')}
+                  className="hidden px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
                 >
                   匯出CSV
                 </button>
@@ -302,8 +303,8 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">個人答題詳情</h2>
                 <button
-                  onClick={() => handleExportCSV('users')}
-                  className="px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+                  onClick={() => handleExport('csv')}
+                  className="hidden px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
                 >
                   匯出CSV
                 </button>

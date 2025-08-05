@@ -11,9 +11,9 @@ const CenteredModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed  inset-0 z-50 flex items-center justify-center bg-black/40">
       <form onSubmit={e => { e.preventDefault(); onSubmit(); }}
-            className="bg-white rounded-lg p-6 w-full max-w-sm space-y-4">
+            className="bg-white m-4 rounded-lg p-6 w-full max-w-sm space-y-4">
         <h3 className="text-lg font-semibold">{title}</h3>
 
         {/* 活動名稱 */}

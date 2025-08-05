@@ -20,9 +20,10 @@ export const Scoreboard = ({ score, eventName }) => (
 /**
  * 開始畫面組件
  */
-export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onGoToAdminE,isEventMode,detectedEventName,eventExists ,done,doCycle,onGoToAdminPage,questionNum}) => {
+export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onGoToAdminE,isEventMode,detectedEventName,eventExists ,done,doCycle,onGoToAdminPage}) => {
   const [eventNames, setEventNames] = useState([]);
-  
+  const [touchCount, setTouchCount] = useState(0);
+  const [showAdminBtn, setShowAdminBtn] = useState(false);
   
   const [errorMessage, setErrorMessage] = useState('');
   const [eventName, setEventNameState] = useState(''); // 新增 eventName 狀態
@@ -62,6 +63,24 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
     onStart();
   };
 
+  const handleBadgeClick = () => {
+    setTouchCount((prev) => {
+      const next = prev + 1;
+      if (next >= 5) {
+        setShowAdminBtn(true);       // 連點到 5，顯示按鈕
+      }
+      return next;
+    });
+  };
+  useEffect(() => {
+    if (touchCount === 0 || showAdminBtn) return;
+
+    const timer = setTimeout(() => setTouchCount(0), 3_000); // 3 s 內沒繼續點就重置
+    return () => clearTimeout(timer);
+  }, [touchCount, showAdminBtn]);
+
+  console.log(isEventMode , eventExists , detectedEventName)
+
   return (
     <div className="flex flex-col items-center justify-center h-full text-center p-4">
       <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">資源回收小遊戲</h1>
@@ -82,8 +101,9 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
         </select>
       </div>
       )}
-      {isEventMode && eventExists && detectedEventName && (
-          <div className="mb-6 p-4 bg-green-600/70 rounded-lg border-2 border-green-300">
+      {isEventMode=='event' && eventExists && detectedEventName && (
+          <div className="mb-6 p-4 bg-green-600/70 rounded-lg border-2 border-green-300"
+          onClick={handleBadgeClick}>
             
             <p className="text-xl font-bold select-text">{detectedEventName}</p>
             
@@ -138,7 +158,7 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
         </div>
       )}
 
-      {isEventMode !== 'admin' && (
+      {isEventMode !== 'admin' && showAdminBtn && (
         <button
         onClick={onGoToAdminPage}
         className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-full text-lg shadow-md hover:bg-gray-700 active:bg-gray-800 transition-all duration-200 border-b-2 border-gray-800 hover:border-gray-700"

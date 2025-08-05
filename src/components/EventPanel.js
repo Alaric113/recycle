@@ -5,6 +5,7 @@ import QuestionAnalytics from "./QuestionAnalytics";
 import QRCode from "qrcode";
 import QRCodeModal from "./QRCodeModal";
 import { updateEvent } from "../hooks/eventFirestore";
+import { exportParticipantsToPDF } from '../utils/exportUtils';
 
 const EventPanel = ({ db, onBackToStart }) => {
   const [events, setEvents] = useState([]);
