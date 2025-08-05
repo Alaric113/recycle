@@ -66,6 +66,7 @@ export const getEventNames = async (db) => {
 export const updateEvent = async (db, eventName, payload) => {
   try {
     await updateDoc(doc(db, "events", eventName), payload);
+    console.log("活動更新成功:", eventName);
   } catch (err) {
     console.error("更新活動失敗", err);
     throw err;

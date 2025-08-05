@@ -34,7 +34,29 @@ export const useEventValidator = (db, eventName, shouldCheck, uid) => {
 
     return () => unsub();
   }, [db, eventName, shouldCheck, uid]);
-  console.log()
+  
 
-  return { eventExists, isChecking, done ,questionNum };
+  return { eventExists, isChecking, done  };
 };
+
+
+export const useGetEventQNUM = (db, eventName) => {
+  
+  const [questionNum, setQuestionNum] = useState(0);
+  useEffect(() => {
+    if (!db || !eventName) return;
+
+    const fetchQuestionNum = async () => {
+      const eventDocRef = doc(db, 'events', eventName);
+      const snap = await getDoc(eventDocRef);
+      if (snap.exists()) {
+        console.log(snap.data().questionNum)
+        setQuestionNum(snap.data().questionNum);
+      }
+    };
+
+    fetchQuestionNum();
+  }, [db,eventName,questionNum]);
+
+  return { questionNum };
+}

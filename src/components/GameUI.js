@@ -79,7 +79,7 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
     return () => clearTimeout(timer);
   }, [touchCount, showAdminBtn]);
 
-  console.log(isEventMode , eventExists , detectedEventName)
+ 
 
   return (
     <div className="flex flex-col items-center justify-center h-full text-center p-4">

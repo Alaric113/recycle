@@ -4,6 +4,7 @@ import { shuffleArray } from '../utils';
 import CenteredModal from './NameModel';
 import { saveDetailedAnswer } from '../hooks/answerAnalytics';
 import { QUIZ_TYPES, ITEMS_PER_ROUND, DEFAULT_QUIZ_ITEMS, TRASH_TYPES, BIN_EMOJIS } from '../constants';
+import { useGetEventQNUM } from '../hooks/useEventValidator';
 
 const BUTTONS_PER_ROW = 4;
 const binTypes = Object.values(TRASH_TYPES);
@@ -14,12 +15,12 @@ function chunk(array, size) {
   );
 }
 
-const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerName: initialPlayerName,db ,questionNum}) => {
+const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerName: initialPlayerName,db,questionNum}) => {
   const [items, setItems] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState({ show: false, message: '', color: '' });
-
+  
   const [showNameModal, setShowNameModal] = useState(true);
   const [playerName, setPlayerName] = useState(initialPlayerName || '');
   const [inputName, setInputName] = useState('');
@@ -30,7 +31,7 @@ const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerN
   const [questionStartTime, setQuestionStartTime] = useState(null);
   const [sessionId] = useState(userId + '_' + Date.now());
 
-
+  
   
   useEffect(() => {
     if (gameStarted && items.length > 0 && currentIdx < items.length) {
@@ -41,10 +42,18 @@ const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerN
 
   useEffect(() => {
     const source = (allQuizItems && allQuizItems.length > 0) ? allQuizItems : DEFAULT_QUIZ_ITEMS;
-    setItems(shuffleArray([...source]).slice(0, questionNum));
+    
+    if(questionNum >0){
+      
+      setItems(shuffleArray([...source]).slice(0, questionNum));
+    }
+    
+    
     setCurrentIdx(0);
     setScore(0);
-  }, [allQuizItems]);
+  }, [allQuizItems,questionNum]);
+
+  
 
  // 修正遊戲結束的 useEffect
 useEffect(() => {
@@ -101,7 +110,7 @@ useEffect(() => {
     if (eventName && userId) {
       try {
         await saveDetailedAnswer(db, eventName, userId, answerRecord);
-        console.log('答題記錄儲存成功');
+        //console.log('答題記錄儲存成功');
       } catch (error) {
         console.error('儲存失敗:', error);
       }
@@ -155,11 +164,14 @@ useEffect(() => {
     );
   }
 
+  
   if (!items.length || currentIdx >= items.length) {
+    
     return <div className="flex flex-col items-center mt-24">載入中...</div>;
   }
 
   const currentItem = items[currentIdx];
+  
 
   // 渲染題目區域
   const renderQuestionArea = () => {

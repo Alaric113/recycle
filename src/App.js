@@ -4,7 +4,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { saveScore } from './hooks/eventFirestore';
-import { useEventValidator } from './hooks/useEventValidator';
+import { useEventValidator, useGetEventQNUM } from './hooks/useEventValidator';
 import { BrowserRouter, Routes, Route, useParams, useNavigate } from 'react-router-dom';
 /* global __app_id, __firebase_config, __initial_auth_token */
 
@@ -27,7 +27,7 @@ import Password from './components/Password';
 function GameApp() {
   const { eventName: urlEventName } = useParams();
   const { cycle: urlCycle } = useParams();
-
+const [reloadQNumTrigger, setReloadQNumTrigger] = useState(0);
   const [view, setView] = useState('start');
   const [finalScore, setFinalScore] = useState(0);
   const [db, setDb] = useState(null);
@@ -41,8 +41,9 @@ function GameApp() {
   const { items: quizItems, isLoading } = useFirestoreItems(db, appId, isAuthReady);
   const [detectedEventName, setDetectedEventName] = useState(null);
   const [mode, setMode] = useState('');
+  const {questionNum} = useGetEventQNUM(db, eventName,reloadQNumTrigger);
   const [shouldCheckEvent, setShouldCheckEvent] = useState(false);
-  const { eventExists, isChecking,done,questionNum } = useEventValidator(db, detectedEventName, shouldCheckEvent,userId);
+  const { eventExists, isChecking,done } = useEventValidator(db, detectedEventName, shouldCheckEvent,userId);
   const [ doCycle, setDoCycle] = useState(false);
 
   const getEventFromPath = () => {
@@ -214,6 +215,7 @@ const handleGoToStart = useCallback(async () => {
       // 重置遊戲狀態
       setFinalScore(0);
       setPlayerName('');
+      setReloadQNumTrigger(prev => prev + 1);
     }
     
     setView('start');
@@ -253,11 +255,13 @@ const handleGoToStart = useCallback(async () => {
             </div>
         );
     }
-
+    
     switch (view) {
       case 'playing':
+        console.log('開始遊戲，題數', questionNum);
         return <Game onGameEnd={handleGameEnd} onGameCancel={handleGameCancel} allQuizItems={quizItems} userId={userId} eventName={eventName} setPlayerName={setPlayerName} playerName={playerName} doCycle={doCycle} db={db} questionNum={questionNum}/>;
       case 'end':
+        
         return <RoundCompleteScreen score={finalScore} onRestart={handleGoToStart} questionNum={questionNum} />;
       case 'admin':
         return <AdminPanel items={allTrashItems} db={db} appId={appId} onBackToStart={handleGoToStart} />;
@@ -267,6 +271,7 @@ const handleGoToStart = useCallback(async () => {
         return <Password onClose={handleGoToStart} onAuthenticated={handleAuthenticated}/>
       case 'start':
       default:
+        
         return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} onGoToAdminE={handleGoToAdminE} userId={userId} db={db} setEventName={setEventName} isEventMode={mode} detectedEventName={detectedEventName} eventExists={eventExists} done={done} doCycle={doCycle} onGoToAdminPage={handleGoToAdminPage} questionNum={questionNum}/>;
     }
   };
