@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Scoreboard } from './GameUI';
 import { shuffleArray } from '../utils';
-import CenteredModal from './nameModel';
+import CenteredModal from './NameModel';
 import { saveDetailedAnswer } from '../hooks/answerAnalytics';
 import { QUIZ_TYPES, ITEMS_PER_ROUND, DEFAULT_QUIZ_ITEMS, TRASH_TYPES, BIN_EMOJIS } from '../constants';
 
@@ -235,7 +235,7 @@ useEffect(() => {
       </div>
       
       {/* 題目區域 */}
-      <div className="flex-shrink-0 flex items-center justify-center p-4">
+      <div className="flex-shrink-0 flex items-center justify-center p-4 mt-9">
         
           {renderQuestionArea()}
         
@@ -243,7 +243,7 @@ useEffect(() => {
       
       
       {/* 答案區域 */}
-      <div className="flex flex-wrap  justify-center items-center p-2 bg-black/30 rounded-xl gap-2 sm:gap-2">
+      <div className="flex flex-wrap  justify-center items-center p-2 bg-black/30 rounded-xl gap-2 sm:gap-2 mb-10 md:mb-1">
         {renderAnswerArea()}
       </div>
       

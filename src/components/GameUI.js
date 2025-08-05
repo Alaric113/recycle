@@ -116,7 +116,7 @@ export const StartScreen = ({ onStart, onGoToAdmin, userId, db, setEventName,onG
         </div>
       )}
       {isEventMode =='none' && (
-          <div className="mb-6 p-4 bg-red-600/70 rounded-lg border-2 border-red-300">
+          <div className="mb-6 p-4 bg-red-600/70 rounded-lg border-2 border-red-300 "onClick={handleBadgeClick}>
             
             <p className="text-xl font-bold select-text">沒有此活動</p>
             <p className="text-xl font-bold select-text">{detectedEventName}</p>
