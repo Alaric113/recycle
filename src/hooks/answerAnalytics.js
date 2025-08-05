@@ -80,7 +80,7 @@ export const subscribeToAnalytics = (db, eventName, callback) => {
   const unsubscribeScores = onSnapshot(scoresQuery, (snapshot) => {
     const scores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     callback({ type: 'scores', data: scores });
-    console.log('分數更新:', scores);
+    
     
     // 當分數更新時，重新獲取所有答題記錄
     getAnswersFromAllUsers();
@@ -90,7 +90,7 @@ export const subscribeToAnalytics = (db, eventName, callback) => {
   getAnswersFromAllUsers();
 
   return () => {
-    console.log(unsubscribeScores())
+    
     unsubscribeScores();
   };
 };

@@ -13,14 +13,11 @@ export const BarChart = ({ data, title, xKey, yKey, color = "bg-blue-500" }) => 
       <div className="space-y-2">
         {data.slice(0, 10).map((item, index) => (
           <div key={index} className="flex items-center">
-            <div className="w-32 text-sm truncate pr-2">
+            <div className="w-3/4 text-sm truncate pr-2">
               {item[xKey]}
             </div>
-            <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
-              <div 
-                className={`${color} h-6 rounded-full transition-all duration-300`}
-                style={{ width: `${(parseFloat(item[yKey]) / maxValue) * 100}%` }}
-              />
+            <div className="flex-1 bg-gray-200 rounded-full h-6 relative ">
+              
               <span className="absolute right-2 top-0 h-6 flex items-center text-xs text-gray-700">
                 {item[yKey]}{yKey.includes('Rate') ? '%' : ''}
               </span>
@@ -78,8 +75,8 @@ export const StatsCard = ({ title, value, subtitle, color = "blue" }) => {
 
   return (
     <div className={`${colorClasses[color]} p-4 rounded-lg`}>
-      <h3 className="text-sm font-medium opacity-80">{title}</h3>
-      <p className="text-2xl font-bold mt-1">{value}</p>
+      <h3 className="text-sm font-medium opacity-80 text-center">{title}</h3>
+      <p className="text-xl font-bold mt-1 text-center">{value}</p>
       {subtitle && <p className="text-sm mt-1 opacity-70">{subtitle}</p>}
     </div>
   );

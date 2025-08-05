@@ -53,7 +53,7 @@ export const processQuestionAnalytics = (answers) => {
    */
   export const processUserDetails = (answers, scores) => {
     const userDetails = {};
-  
+    console.log(scores)
     // 處理答題記錄
     answers.forEach(answer => {
       if (!userDetails[answer.userId]) {
@@ -78,6 +78,7 @@ export const processQuestionAnalytics = (answers) => {
         user.correctAnswers++;
       }
     });
+    
   
     // 合併分數資訊
     scores.forEach(score => {
@@ -89,11 +90,13 @@ export const processQuestionAnalytics = (answers) => {
           completedAt: score.timestamp
         };
       }
+      console.log('用戶詳情:', userDetails[score.userId]);
     });
+    console.log(userDetails)
   
     return Object.values(userDetails).map(user => ({
       ...user,
-      correctRate: user.totalAnswers > 0 ? (user.correctAnswers / user.totalAnswers * 100).toFixed(1) : 0,
+      correctRate: user.totalAnswers > 0 ? (user.correctAnswers / user.totalAnswers * 100).toFixed(0) : 0,
       averageResponseTime: user.totalAnswers > 0 
         ? (user.totalResponseTime / user.totalAnswers / 1000).toFixed(1) 
         : 0

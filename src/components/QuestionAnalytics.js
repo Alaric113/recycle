@@ -25,6 +25,7 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
         
         setAnswers(data);
       } else if (type === 'scores') {
+        console.log('Scores updated:', data);
         setScores(data);
       }
       setLoading(false);
@@ -100,17 +101,17 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
         {/* 頂部導航 */}
         <div className="flex-shrink-0 p-4 sm:p-6 border-b border-gray-200">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-gray-800">答題分析 - {eventName}</h1>
+            <h1 className="text-lg md:text-2xl font-bold text-gray-800">答題分析 - {eventName}</h1>
             <div className="flex space-x-2">
               <button
                 onClick={() => exportToPDF('analytics-content', `${eventName}_分析報告`)}
-                className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                className="px-2 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-xs md:text-sm transition-colors flex items-center justify-center gap-1"
               >
                 匯出PDF
               </button>
               <button
                 onClick={onBack}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs md:text-sm transition-colors"
               >
                 返回
               </button>
@@ -118,7 +119,7 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
           </div>
 
           {/* 分頁標籤 */}
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-4">
+          <div className="flex space-x-1 bg-gray-100  rounded-lg mb-2 text-sm md:text-base">
             {[
               { id: 'overview', label: '總覽' },
               { id: 'questions', label: '題目分析' },
@@ -128,7 +129,7 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                className={`px-2 py-2 rounded-md font-medium transition-colors ${
                   activeTab === tab.id
                     ? 'bg-blue-500 text-white'
                     : 'text-gray-600 hover:text-gray-800'
@@ -181,9 +182,9 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* 統計卡片 */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-3 md:grid-cols-4  gap-4">
                 <StatsCard 
-                  title="總參與人數" 
+                  title="總人數" 
                   value={overviewStats.totalParticipants} 
                   color="blue" 
                 />
@@ -194,13 +195,8 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
                 />
                 <StatsCard 
                   title="平均分數" 
-                  value={`${overviewStats.averageScore}分`} 
+                  value={`${overviewStats.overallCorrectRate}分`} 
                   color="yellow" 
-                />
-                <StatsCard 
-                  title="整體正確率" 
-                  value={`${overviewStats.overallCorrectRate}%`} 
-                  color="purple" 
                 />
               </div>
 
@@ -262,9 +258,9 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">題目</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">正確答案</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">正確率</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">答題人次</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">平均時間</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">常見錯誤</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">答題人次</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">平均時間</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">常見錯誤</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -283,9 +279,9 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
                             {question.correctRate}%
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm">{question.totalAnswers}</td>
-                        <td className="px-4 py-3 text-sm">{question.averageResponseTime}秒</td>
-                        <td className="px-4 py-3 text-sm">
+                        <td className="px-4 py-3 text-sm hidden md:table-cell">{question.totalAnswers}</td>
+                        <td className="px-4 py-3 text-sm hidden md:table-cell">{question.averageResponseTime}秒</td>
+                        <td className="px-4 py-3 text-sm hidden md:table-cell">
                           {Object.entries(question.wrongAnswers).slice(0, 2).map(([answer, count]) => (
                             <span key={answer} className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-xs mr-1 mb-1">
                               {answer} ({count})
@@ -321,9 +317,9 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">性別</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">年齡</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">總分</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">正確率</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">平均時間</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">答題記錄</th>
+                     
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">平均時間</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">答題記錄</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -334,20 +330,18 @@ const QuestionAnalytics = ({ db, eventName, onBack }) => {
                           {user.gender === 'male' ? '男' : user.gender === 'female' ? '女' : '其他'}
                         </td>
                         <td className="px-4 py-3 text-sm">{user.age}歲</td>
-                        <td className="px-4 py-3 text-sm font-bold text-blue-600">
-                          {user.finalScore || 0}分
-                        </td>
+                        
                         <td className="px-4 py-3 text-sm">
                           <span className={`px-2 py-1 rounded text-xs ${
                             parseFloat(user.correctRate) >= 80 ? 'bg-green-100 text-green-800' :
                             parseFloat(user.correctRate) >= 60 ? 'bg-yellow-100 text-yellow-800' :
                             'bg-red-100 text-red-800'
                           }`}>
-                            {user.correctRate}%
+                            {user.correctRate}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm">{user.averageResponseTime}秒</td>
-                        <td className="px-4 py-3 text-sm">
+                        <td className="px-4 py-3 text-sm hidden md:table-cell">{user.averageResponseTime}秒</td>
+                        <td className="px-4 py-3 text-sm hidden md:table-cell">
                           <details className="cursor-pointer">
                             <summary className="text-blue-500 hover:text-blue-700">
                               查看詳情 ({user.answers.length}題)

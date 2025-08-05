@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { collection, getDocs, setDoc, doc } from "firebase/firestore";
 import CenteredModal from "./eventNameModel";
 import QuestionAnalytics from "./QuestionAnalytics";
+import QRCode from "qrcode";
+import QRCodeModal from "./QRCodeModal";
 
 const EventPanel = ({ db, onBackToStart }) => {
   const [events, setEvents] = useState([]);
@@ -17,6 +19,10 @@ const EventPanel = ({ db, onBackToStart }) => {
   const [numQuestions, setNumQuestions] = useState(5); // 新增：題目數量狀態
   const [showDetailedAnalytics, setShowDetailedAnalytics] = useState(false);
   const [analyticsEventName, setAnalyticsEventName] = useState(null);
+
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrEventName, setQrEventName] = useState("");
+  const [qrEventType, setQrEventType] = useState("one");
 
   const handleShowDetailedAnalytics = (eventName) => {
     setAnalyticsEventName(eventName);
@@ -122,10 +128,10 @@ const EventPanel = ({ db, onBackToStart }) => {
     }
   };
 
-  const handleGenerateQRCode = (eventName) => {
-    const eventUrl = generateEventUrl(eventName);
-    console.log("準備生成 QR Code:", eventUrl);
-    alert(`QR Code 功能開發中\n活動：${eventName}\n網址：${eventUrl}`);
+  const handleGenerateQRCode = (eventName, type = "one") => {
+    setQrEventName(eventName);
+    setQrEventType(type);
+    setShowQRModal(true);
   };
 
   const handleAddEvent = async () => {
@@ -224,298 +230,302 @@ const EventPanel = ({ db, onBackToStart }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 flex flex-col max-h-screen overflow-y-hidden md:overflow-y-auto">
-  <div className="mx-auto flex flex-col flex-1 max-w-7xl w-full">
-    {/* 標題區域 - 固定 */}
-    <div className="bg-white rounded-lg shadow-md p-6 mb-3 flex-shrink-0">
-      <div className="flex justify-between items-center">
-        <h1 className="text-xl md:text-3xl font-bold text-gray-800">
-          活動管理
-        </h1>
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowAddEventModal(true)}
-            className="text-sm md:text-lg px-2 py-1 sm:px-4 sm:py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-          >
-            新增活動
-          </button>
-          <button
-            onClick={onBackToStart}
-            className="text-sm md:text-lg px-2 py-1 sm:px-4 sm:py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-          >
-            返回首頁
-          </button>
+    <div className="min-h-screen bg-gray-50 p-4 flex flex-col max-h-screen overflow-y-scroll md:overflow-y-hidden min-h-0">
+      <div className="mx-auto flex flex-col flex-1 min-h-0 max-w-7xl w-full ">
+        {/* 標題區域 - 固定 */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-3 flex-shrink-0">
+          <div className="flex justify-between items-center">
+            <h1 className="text-xl md:text-3xl font-bold text-gray-800">
+              活動管理
+            </h1>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowAddEventModal(true)}
+                className="text-sm md:text-lg px-2 py-1 sm:px-4 sm:py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              >
+                新增活動
+              </button>
+              <button
+                onClick={onBackToStart}
+                className="text-sm md:text-lg px-2 py-1 sm:px-4 sm:py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                返回首頁
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
 
-    {/* 模態框和錯誤訊息 */}
-    <CenteredModal
-      isOpen={showAddEventModal}
-      onClose={() => {
-        setShowAddEventModal(false);
-        setNewEventName("");
-      }}
-      title="請輸入新活動名稱"
-      onSubmit={handleAddEvent}
-      inputValue={newEventName}
-      setInputValue={setNewEventName}
-      inputQValue={numQuestions}
-      setInputQValue={setNumQuestions}
-      showCancelButton={true}
-    />
+        {/* 模態框和錯誤訊息 */}
+        <CenteredModal
+          isOpen={showAddEventModal}
+          onClose={() => {
+            setShowAddEventModal(false);
+            setNewEventName("");
+          }}
+          title="請輸入新活動名稱"
+          onSubmit={handleAddEvent}
+          inputValue={newEventName}
+          setInputValue={setNewEventName}
+          inputQValue={numQuestions}
+          setInputQValue={setNumQuestions}
+          showCancelButton={true}
+        />
 
-    {error && (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex-shrink-0">
-        {error}
-      </div>
-    )}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex-shrink-0">
+            {error}
+          </div>
+        )}
 
-    {/* 主要內容區域 */}
-    <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0 overflow-y-auto md:overflow-y-hidden">
-      {/* 左側活動列表區域 */}
-      
-        {/* 活動列表 - 佔用剩餘空間 */}
-        <div className="bg-white  md:w-1/3 rounded-lg shadow-md p-6 ">
-          <h2 className="text-lg md:text-xl font-semibold mb-4 flex items-center flex-shrink-0">
-            📋 所有活動
-            <span className="ml-2 text-sm text-gray-500">
-              ({events.length})
-            </span>
-          </h2>
+        {/* 主要內容區域 */}
+        <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0 ">
+          {/* 左側活動列表區域 */}
 
-          {/* 滾動內容區域 */}
-          <div className="flex-1 overflow-y-auto min-h-0">
-            {loadingEvents ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="mt-2 text-gray-600">載入活動中...</p>
-              </div>
-            ) : events.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p>目前沒有任何活動</p>
-                <p className="text-sm mt-2">建立新活動後會顯示在這裡</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {events.map((eventName) => (
-                  <div className="flex flex-col">
-                  <div
-                    key={eventName}
-                    onClick={() => handleEventSelect(eventName)}
-                    className={`text-sm md:text-base p-3 rounded-lg cursor-pointer transition-all border-2 flex flex-col items-center sm:flex-row justify-between
+          {/* 活動列表 - 佔用剩餘空間 */}
+          <div className="bg-white  md:w-1/3 rounded-lg shadow-md p-6 ">
+            <h2 className="text-lg md:text-xl font-semibold mb-4 flex items-center flex-shrink-0">
+              📋 所有活動
+              <span className="ml-2 text-sm text-gray-500">
+                ({events.length})
+              </span>
+            </h2>
+
+            {/* 滾動內容區域 */}
+            <div className="flex-1 overflow-y-auto min-h-0">
+              {loadingEvents ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">載入活動中...</p>
+                </div>
+              ) : events.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>目前沒有任何活動</p>
+                  <p className="text-sm mt-2">建立新活動後會顯示在這裡</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {events.map((eventName) => (
+                    <div className="flex flex-col">
+                      <div
+                        key={eventName}
+                        onClick={() => handleEventSelect(eventName)}
+                        className={`text-sm md:text-base p-3 rounded-lg cursor-pointer transition-all border-2 flex flex-col items-center sm:flex-row justify-between
                     ${
                       selectedEvent === eventName
                         ? "bg-blue-100 border-blue-300 shadow-md"
                         : "bg-black/5 border-transparent hover:bg-blue-50 hover:border-blue-200"
                     }`}
-                  >
-                    <div className="text-center sm:text-left">
-                      <div className="font-medium text-gray-800">
-                        {eventName}
+                      >
+                        <div className="text-center sm:text-left">
+                          <div className="font-medium text-gray-800">
+                            {eventName}
+                          </div>
+                          <div className="text-xs md:text-sm text-gray-500 mt-1">
+                            點擊查看詳情
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-xs md:text-sm text-gray-500 mt-1">
-                        點擊查看詳情
-                      </div>
-                    </div>
-                    
-                  </div>
-                  {selectedEvent === eventName && (
-                      <div className="flex flex-row justify-center mt-1 gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCopyUrl(selectedEvent, "one");
-                        }}
-                        className="px-3 py-2 bg-blue-500 text-white text-xs md:text-sm rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
-                        title="複製活動網址"
-                      >
-                        <span>🔗</span>
-                        <span>一次網址</span>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCopyUrl(selectedEvent, "more");
-                        }}
-                        className="px-2 py-1 bg-blue-500 text-white text-xs md:text-sm rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
-                        title="複製活動網址"
-                      >
-                        <span>🔗</span>
-                        <span>重複網址</span>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleGenerateQRCode(selectedEvent);
-                        }}
-                        className="px-3 py-2 bg-purple-500 text-white text-xs md:text-sm rounded-md hover:bg-purple-600 transition-colors flex items-center justify-center gap-1"
-                        title="生成 QR Code"
-                      >
-                        <span>📱</span>
-                        <span>QR Code</span>
-                      </button>
-                    </div>
+                      {selectedEvent === eventName && (
+                        <div className="flex flex-row justify-between mt-1 gap-2">
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleGenerateQRCode(selectedEvent, "one");
+                            }}
+                            className="flex-1 px-2 py-2 bg-blue-500 text-white text-xs md:text-sm rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
+                            title="生成 QR Code"
+                          >
+                            <span>網址</span>
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleShowDetailedAnalytics(selectedEvent)
+                            }
+                            className="flex-1 px-2 py-2 bg-purple-500 text-white text-xs md:text-sm rounded-md hover:bg-purple-600 transition-colors flex items-center justify-center gap-1"
+                          >
+                            詳細資料
+                          </button>
+                          <QRCodeModal
+                            isOpen={showQRModal}
+                            onClose={() => setShowQRModal(false)}
+                            eventName={qrEventName}
+                            eventUrl={generateEventUrl(
+                              qrEventName,
+                              qrEventType
+                            )}
+                            eventType={qrEventType}
+                          />
+                        </div>
                       )}
-                  </div>
-                ))}
-              </div>
-            )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        
 
-
-        
-      </div>
-
-      {/* 右側詳細資訊區域 */}
-      <div className="flex-1 bg-white rounded-lg shadow-md p-6 flex flex-col min-h-0">
-        <div className="flex justify-between items-center mb-4 flex-shrink-0">
-          <h2 className="text-lg md:text-xl font-semibold">
-            {selectedEvent ? `📊 ${selectedEvent}` : "請選擇活動"}
-          </h2>
-          {selectedEvent && (
-            <button
-              onClick={() => handleShowDetailedAnalytics(selectedEvent)}
-              className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600"
-            >
-              詳細分析
-            </button>
-          )}
-        </div>
-
-        {/* 右側內容區域 - 可滾動 */}
-        <div className="flex-1 overflow-y-auto min-h-0">
-          {!selectedEvent ? (
-            <div className="text-center py-12 text-gray-500">
-              <div className="text-4xl mb-4">🎯</div>
-              <p className="text-lg">請從左側列表選擇一個活動</p>
-              <p className="text-sm mt-2">
-                選擇後可查看該活動的參與者資料與答題狀況
-              </p>
+          {/* 右側詳細資訊區域 */}
+          <div className="flex-1 bg-white rounded-lg shadow-md p-6 flex-col min-h-0 hidden md:flex">
+            <div className="flex justify-between items-center mb-4 flex-shrink-0">
+              <h2 className="text-lg md:text-xl font-semibold">
+                {selectedEvent ? `📊 ${selectedEvent}` : "請選擇活動"}
+              </h2>
+              {selectedEvent && (
+                <button
+                  onClick={() => handleShowDetailedAnalytics(selectedEvent)}
+                  className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600"
+                >
+                  詳細資料
+                </button>
+              )}
             </div>
-          ) : isLoading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-4 text-gray-600">載入參與者資料中...</p>
-            </div>
-          ) : participants.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <div className="text-4xl mb-4">👥</div>
-              <p className="text-lg">此活動尚無參與者</p>
-              <p className="text-sm mt-2">有人開始答題後會顯示在這裡</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* 統計數據 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-blue-50 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {participantCount}
+
+            {/* 右側內容區域 - 可滾動 */}
+            <div className="flex-1 min-h-0 flex-col hidden md:flex">
+              {!selectedEvent ? (
+                <div className="text-center py-12 text-gray-500">
+                  <div className="text-4xl mb-4">🎯</div>
+                  <p className="text-lg">請從左側列表選擇一個活動</p>
+                  <p className="text-sm mt-2">
+                    選擇後可查看該活動的參與者資料與答題狀況
+                  </p>
+                </div>
+              ) : isLoading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">載入參與者資料中...</p>
+                </div>
+              ) : participants.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <div className="text-4xl mb-4">👥</div>
+                  <p className="text-lg">此活動尚無參與者</p>
+                  <p className="text-sm mt-2">有人開始答題後會顯示在這裡</p>
+                </div>
+              ) : (
+                <div className="space-y-6 flex flex-col flex-1 min-h-0 ">
+                  {/* 統計數據 */}
+                  <div className="flex w-full justify-between items-center gap-4">
+                    <div className="bg-blue-50 rounded-lg p-4 text-center flex-1">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {participantCount}
+                      </div>
+                      <div className="text-xs md:text-sm text-gray-600">
+                        總人數
+                      </div>
+                    </div>
+                    <div className="bg-green-50 rounded-lg p-4 text-center flex-1">
+                      <div className="text-2xl font-bold text-green-600">
+                        {Math.round(
+                          participants.reduce(
+                            (sum, p) => sum + (p.score || 0),
+                            0
+                          ) / participants.length
+                        ) || 0}
+                      </div>
+                      <div className="text-xs md:text-sm text-gray-600">
+                        平均分數
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 rounded-lg p-4 text-center flex-1">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {Math.max(...participants.map((p) => p.score || 0))}
+                      </div>
+                      <div className="text-xs md:text-sm text-gray-600">
+                        最高分數
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600">總參與人數</div>
-                </div>
-                <div className="bg-green-50 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {Math.round(
-                      participants.reduce(
-                        (sum, p) => sum + (p.score || 0),
-                        0
-                      ) / participants.length
-                    ) || 0}
-                  </div>
-                  <div className="text-sm text-gray-600">平均分數</div>
-                </div>
-                <div className="bg-purple-50 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {Math.max(...participants.map((p) => p.score || 0))}
-                  </div>
-                  <div className="text-sm text-gray-600">最高分數</div>
-                </div>
-              </div>
 
-              {/* 參與者表格 */}
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    參與者列表 ({participants.length} 人)
-                  </h3>
+                  {/* 參與者表格 */}
+                  <div className="bg-white rounded-lg shadow overflow-hidden flex-col flex-1 min-h-0 hidden md:flex">
+                    {/* 表頭 */}
+                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex-shrink-0">
+                      <h3 className="text-lg font-medium text-gray-900">
+                        參與者列表 ({participants.length} 人)
+                      </h3>
+                    </div>
+                    <div className="flex-1 overflow-hidden flex">
+                      <div className="overflow-x-auto  overflow-y-auto flex-1">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50 sticky top-0">
+                            <tr>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                                參與者
+                              </th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell sm:px-6">
+                                基本資料
+                              </th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
+                                成績
+                              </th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell sm:px-6">
+                                完成時間
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {participants.map((participant) => (
+                              <tr
+                                key={participant.id}
+                                className="hover:bg-gray-50"
+                              >
+                                <td className="px-3 py-4 whitespace-nowrap sm:px-6">
+                                  <div className="flex items-center">
+                                    <div className="h-8 w-8 flex-shrink-0">
+                                      <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <GenderIcon
+                                          gender={participant.gender}
+                                        />
+                                      </div>
+                                    </div>
+                                    <div className="ml-3">
+                                      <div className="text-sm font-medium text-gray-900">
+                                        {participant.playerName ||
+                                          participant.id}
+                                      </div>
+                                      <div className="sm:hidden text-xs text-gray-500">
+                                        {participant.gender || "未知"} •{" "}
+                                        {participant.age || "未知"}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell sm:px-6">
+                                  <div>
+                                    <div>{participant.gender}</div>
+                                    <div className="text-xs">
+                                      {participant.age || "未知"}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-3 py-4 whitespace-nowrap sm:px-6">
+                                  <div className="flex flex-col sm:flex-row sm:items-center">
+                                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                      {participant.score || 0} 分
+                                    </span>
+                                    <div className="md:hidden text-xs text-gray-500 mt-1">
+                                      {formatTimestamp(participant.timestamp)}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell sm:px-6">
+                                  {formatTimestamp(participant.timestamp)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="overflow-x-auto max-h-96 overflow-y-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50 sticky top-0">
-                      <tr>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
-                          參與者
-                        </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell sm:px-6">
-                          基本資料
-                        </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
-                          成績
-                        </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell sm:px-6">
-                          完成時間
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {participants.map((participant) => (
-                        <tr key={participant.id} className="hover:bg-gray-50">
-                          <td className="px-3 py-4 whitespace-nowrap sm:px-6">
-                            <div className="flex items-center">
-                              <div className="h-8 w-8 flex-shrink-0">
-                                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                                  <GenderIcon gender={participant.gender} />
-                                </div>
-                              </div>
-                              <div className="ml-3">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {participant.playerName || participant.id}
-                                </div>
-                                <div className="sm:hidden text-xs text-gray-500">
-                                  {participant.gender || "未知"} •{" "}
-                                  {participant.age || "未知"}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell sm:px-6">
-                            <div>
-                              <div>{participant.gender}</div>
-                              <div className="text-xs">
-                                {participant.age || "未知"}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-3 py-4 whitespace-nowrap sm:px-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                {participant.score || 0} 分
-                              </span>
-                              <div className="md:hidden text-xs text-gray-500 mt-1">
-                                {formatTimestamp(participant.timestamp)}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell sm:px-6">
-                            {formatTimestamp(participant.timestamp)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-
   );
 };
 
