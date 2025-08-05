@@ -1,87 +1,62 @@
-import React from 'react';
-
-const CenteredModal = ({ 
-  isOpen, 
-  onClose, 
-  title, 
-  onSubmit, 
-  inputValue, 
-  setInputValue,
-  inputQValue,
-  setInputQValue,
-  showCancelButton = false, // 新增：是否顯示取消按鈕
-  cancelText = "取消",
-  submitText = "確認"
+// 🔼 檔案：eventNameModel.js
+const CenteredModal = ({
+  isOpen, onClose, title, onSubmit,
+  inputValue, setInputValue,
+  inputQValue, setInputQValue,
+  inputDesc, setInputDesc,             // ➜ 新增：描述
+  showCancelButton = false,
+  cancelText = '取消',
+  submitText = '確認'
 }) => {
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit();
-  };
-
-  const handleCancel = () => {
-    setInputValue(''); // 清空輸入值
-    setInputQValue(''); // 清空題目數量輸入值
-    onClose(); // 關閉 modal
-  };
-
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 ">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md mx-4">
-        <h3 className="text-xl font-semibold mb-6 text-center text-gray-800 sm:text-lg">
-          {title}
-        </h3>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="mb-6 text-center" >
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="請輸入..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-lg sm:text-md"
-              autoFocus
-            />
-            <label className="text-sm text-gray-600 mt-2 =">
-              請輸入題目數量
-            </label>
-          
-            <input
-              type="number"
-              value={inputQValue}
-              onChange={(e) => setInputQValue(parseInt(e.target.value))}
-              placeholder="請輸入..."
-              className="w-full px-4 py-3 mt-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-lg sm:text-md"
-              
-            />
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <form onSubmit={e => { e.preventDefault(); onSubmit(); }}
+            className="bg-white rounded-lg p-6 w-full max-w-sm space-y-4">
+        <h3 className="text-lg font-semibold">{title}</h3>
 
-          <div className={`flex gap-3 ${showCancelButton ? 'justify-between' : 'justify-center'}`}>
-            {/* 取消按鈕 - 只有在 showCancelButton 為 true 時顯示 */}
-            {showCancelButton && (
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="flex-1 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium "
-              >
-                {cancelText}
-              </button>
-            )}
-            
-            {/* 確認按鈕 */}
-            <button
-              type="submit"
-              disabled={!inputValue.trim()}
-              className={`${showCancelButton ? 'flex-1' : 'px-8'} py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium`}
-            >
-              {submitText}
+        {/* 活動名稱 */}
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          活動名稱 
+        </label>
+        <input className="w-full border rounded px-2 py-1"
+               placeholder="活動名稱"
+               value={inputValue}
+               onChange={e => setInputValue(e.target.value)} />
+
+        {/* 題目數量 */}
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          題目數量  
+        </label>
+        {setInputQValue && (
+          <input type="number" min={1}
+                 className="w-full border rounded px-2 py-1"
+                 placeholder="題目數量"
+                 value={inputQValue}
+                 onChange={e => setInputQValue(e.target.value)} />
+        )}
+
+        {/* 描述欄位（選用） */}
+        
+
+        <div className="flex justify-end gap-2 pt-2">
+          {showCancelButton && (
+            <button type="button"
+                    onClick={onClose}
+                    className="px-3 py-1 bg-gray-500 text-white rounded">
+              {cancelText}
             </button>
-          </div>
-        </form>
-      </div>
+          )}
+          <button type="submit"
+                  className="px-3 py-1 bg-blue-600 text-white rounded">
+            {submitText}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
+
 
 export default CenteredModal;

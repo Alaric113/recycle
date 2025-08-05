@@ -14,7 +14,7 @@ function chunk(array, size) {
   );
 }
 
-const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerName: initialPlayerName,db }) => {
+const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerName: initialPlayerName,db ,questionNum}) => {
   const [items, setItems] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -31,7 +31,7 @@ const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerN
   const [sessionId] = useState(userId + '_' + Date.now());
 
 
-
+  console.log(playerName)
   useEffect(() => {
     if (gameStarted && items.length > 0 && currentIdx < items.length) {
       setQuestionStartTime(Date.now());
@@ -41,7 +41,7 @@ const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerN
 
   useEffect(() => {
     const source = (allQuizItems && allQuizItems.length > 0) ? allQuizItems : DEFAULT_QUIZ_ITEMS;
-    setItems(shuffleArray([...source]).slice(0, ITEMS_PER_ROUND));
+    setItems(shuffleArray([...source]).slice(0, questionNum));
     setCurrentIdx(0);
     setScore(0);
   }, [allQuizItems]);

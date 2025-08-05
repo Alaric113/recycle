@@ -13,7 +13,7 @@ export const TRASH_TYPES = {
 };
 
 export const BIN_EMOJIS = {
-  [TRASH_TYPES.PAPER]: '🧻',
+  [TRASH_TYPES.PAPER]: '📄',
   [TRASH_TYPES.PAPER_CONTAINER]: '📦',
   [TRASH_TYPES.PLASTIC]: '🧴',
   [TRASH_TYPES.GLASS]: '🍾',

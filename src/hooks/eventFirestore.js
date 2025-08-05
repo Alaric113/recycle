@@ -1,4 +1,4 @@
-import { collection, doc, setDoc, getDocs,addDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs,addDoc ,updateDoc} from 'firebase/firestore';
 
 /**
  * 儲存使用者分數到 Firestore
@@ -43,5 +43,14 @@ export const getEventNames = async (db) => {
   } catch (error) {
     console.error("獲取活動名稱失敗:", error);
     return [];
+  }
+};
+
+export const updateEvent = async (db, eventName, payload) => {
+  try {
+    await updateDoc(doc(db, 'events', eventName), payload);
+  } catch (err) {
+    console.error('更新活動失敗', err);
+    throw err;
   }
 };

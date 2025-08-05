@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { collection, getDocs, setDoc, doc } from "firebase/firestore";
+import { collection, getDocs, setDoc, doc ,getDoc } from "firebase/firestore";
 import CenteredModal from "./eventNameModel";
 import QuestionAnalytics from "./QuestionAnalytics";
 import QRCode from "qrcode";
 import QRCodeModal from "./QRCodeModal";
+import { updateEvent } from "../hooks/eventFirestore";
 
 const EventPanel = ({ db, onBackToStart }) => {
   const [events, setEvents] = useState([]);
@@ -19,10 +20,14 @@ const EventPanel = ({ db, onBackToStart }) => {
   const [numQuestions, setNumQuestions] = useState(5); // 新增：題目數量狀態
   const [showDetailedAnalytics, setShowDetailedAnalytics] = useState(false);
   const [analyticsEventName, setAnalyticsEventName] = useState(null);
-
+  const [isEditing, setIsEditing] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrEventName, setQrEventName] = useState("");
   const [qrEventType, setQrEventType] = useState("one");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editEventName, setEditEventName] = useState("");
+  const [editNumQuestions, setEditNumQuestions] = useState(5);
+  const [editDesc, setEditDesc] = useState("");
 
   const handleShowDetailedAnalytics = (eventName) => {
     setAnalyticsEventName(eventName);
@@ -135,6 +140,7 @@ const EventPanel = ({ db, onBackToStart }) => {
   };
 
   const handleAddEvent = async () => {
+    setIsEditing(false);
     if (!newEventName.trim()) {
       alert("請輸入活動名稱");
       return;
@@ -166,6 +172,40 @@ const EventPanel = ({ db, onBackToStart }) => {
     } catch (error) {
       console.error("新增活動失敗:", error);
       alert("新增活動失敗，請稍後再試");
+    }
+  };
+
+  const handleEditClick = (item) => {
+    setIsEditing(true);
+  };
+
+  const openEdit = async (name) => {
+    try {
+      const snap = await getDoc(doc(db, "events", name));
+      const data = snap.data() || {};
+      setEditEventName(name);
+      setEditNumQuestions(data.questionNum || 5);
+      setEditDesc(data.description || "");
+      setShowEditModal(true);
+    } catch (e) {
+      alert("讀取活動資料失敗");
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      await updateEvent(db, editEventName, {
+        questionNum: Number(editNumQuestions),
+        description: editDesc,
+      });
+      alert("活動已更新！");
+      setShowEditModal(false);
+
+      /* 即時更新左側列表顯示的數值 */
+      const listSnap = await getDocs(collection(db, "events"));
+      setEvents(listSnap.docs.map((d) => d.id));
+    } catch {
+      alert("更新失敗");
     }
   };
 
@@ -262,13 +302,28 @@ const EventPanel = ({ db, onBackToStart }) => {
             setShowAddEventModal(false);
             setNewEventName("");
           }}
-          title="請輸入新活動名稱"
+          title={isEditing ? "編輯題目" : "新增題目"}
           onSubmit={handleAddEvent}
           inputValue={newEventName}
           setInputValue={setNewEventName}
           inputQValue={numQuestions}
           setInputQValue={setNumQuestions}
           showCancelButton={true}
+        />
+
+        <CenteredModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          title="編輯活動"
+          onSubmit={handleEditSubmit}
+          inputValue={editEventName}
+          setInputValue={() => {}} // 名稱鎖定，不能改
+          inputQValue={editNumQuestions}
+          setInputQValue={setEditNumQuestions}
+          inputDesc={editDesc}
+          setInputDesc={setEditDesc}
+          showCancelButton
+          submitText="儲存"
         />
 
         {error && (
@@ -327,7 +382,12 @@ const EventPanel = ({ db, onBackToStart }) => {
                       </div>
                       {selectedEvent === eventName && (
                         <div className="flex flex-row justify-between mt-1 gap-2">
-                          
+                          <button
+                            onClick={() => openEdit(eventName)}
+                            className="flex-1 px-2 py-2 bg-orange-400 text-white text-xs md:text-sm rounded-md hover:bg-orange-600 transition-colors flex items-center justify-center gap-1"
+                          >
+                            編輯
+                          </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();

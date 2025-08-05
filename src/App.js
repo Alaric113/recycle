@@ -42,7 +42,7 @@ function GameApp() {
   const [detectedEventName, setDetectedEventName] = useState(null);
   const [mode, setMode] = useState('');
   const [shouldCheckEvent, setShouldCheckEvent] = useState(false);
-  const { eventExists, isChecking,done } = useEventValidator(db, detectedEventName, shouldCheckEvent,userId);
+  const { eventExists, isChecking,done,questionNum } = useEventValidator(db, detectedEventName, shouldCheckEvent,userId);
   const [ doCycle, setDoCycle] = useState(false);
 
   const getEventFromPath = () => {
@@ -256,9 +256,9 @@ const handleGoToStart = useCallback(async () => {
 
     switch (view) {
       case 'playing':
-        return <Game onGameEnd={handleGameEnd} onGameCancel={handleGameCancel} allQuizItems={quizItems} userId={userId} eventName={eventName} setPlayerName={setPlayerName} playerName={playerName} doCycle={doCycle} db={db}/>;
+        return <Game onGameEnd={handleGameEnd} onGameCancel={handleGameCancel} allQuizItems={quizItems} userId={userId} eventName={eventName} setPlayerName={setPlayerName} playerName={playerName} doCycle={doCycle} db={db} questionNum={questionNum}/>;
       case 'end':
-        return <RoundCompleteScreen score={finalScore} onRestart={handleGoToStart} />;
+        return <RoundCompleteScreen score={finalScore} onRestart={handleGoToStart} questionNum={questionNum} />;
       case 'admin':
         return <AdminPanel items={allTrashItems} db={db} appId={appId} onBackToStart={handleGoToStart} />;
       case 'admine':
@@ -267,7 +267,7 @@ const handleGoToStart = useCallback(async () => {
         return <Password onClose={handleGoToStart} onAuthenticated={handleAuthenticated}/>
       case 'start':
       default:
-        return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} onGoToAdminE={handleGoToAdminE} userId={userId} db={db} setEventName={setEventName} isEventMode={mode} detectedEventName={detectedEventName} eventExists={eventExists} done={done} doCycle={doCycle} onGoToAdminPage={handleGoToAdminPage}/>;
+        return <StartScreen onStart={handleRestart} onGoToAdmin={handleGoToAdmin} onGoToAdminE={handleGoToAdminE} userId={userId} db={db} setEventName={setEventName} isEventMode={mode} detectedEventName={detectedEventName} eventExists={eventExists} done={done} doCycle={doCycle} onGoToAdminPage={handleGoToAdminPage} questionNum={questionNum}/>;
     }
   };
 

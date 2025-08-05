@@ -8,6 +8,7 @@ export const useEventValidator = (db, eventName, shouldCheck, uid) => {
   const [eventExists, setEventExists] = useState(false);
   const [done, setDone] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [questionNum, setQuestionNum] = useState(0);
 
   useEffect(() => {
     if (!db || !eventName || !shouldCheck || !uid) return;
@@ -18,6 +19,7 @@ export const useEventValidator = (db, eventName, shouldCheck, uid) => {
     const eventDocRef = doc(db, 'events', eventName);
     getDoc(eventDocRef).then(snap => {
       setEventExists(snap.exists());
+      setQuestionNum(snap.data().questionNum)
     });
 
     // 2️⃣ 即時監聽「這個使用者」的成績文件
@@ -29,6 +31,7 @@ export const useEventValidator = (db, eventName, shouldCheck, uid) => {
 
     return () => unsub();
   }, [db, eventName, shouldCheck, uid]);
+  console.log()
 
-  return { eventExists, isChecking, done };
+  return { eventExists, isChecking, done ,questionNum };
 };
