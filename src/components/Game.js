@@ -30,6 +30,7 @@ const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerN
   const [answerRecords, setAnswerRecords] = useState([]); // 儲存詳細答題記錄
   const [questionStartTime, setQuestionStartTime] = useState(null);
   const [sessionId] = useState(userId + '_' + Date.now());
+  const [answers, setAnswers] = useState([]);
 
   
   
@@ -60,7 +61,8 @@ useEffect(() => {
   // 加入 gameStarted 檢查，確保遊戲真的開始了才結束
   if (gameStarted && items.length > 0 && currentIdx >= items.length) {
     const timeout = setTimeout(() => {
-      onGameEnd(score, playerName,userId,[gender,age]); // 確保傳遞玩家姓名
+      onGameEnd(score, playerName,userId,[gender,age],answers); // 確保傳遞玩家姓名
+      console.log(playerName, '遊戲結束，分數:', score);
     }, feedback.show ? 1500 : 0);
     return () => clearTimeout(timeout);
   }
@@ -72,6 +74,7 @@ useEffect(() => {
       setPlayerName(inputName.trim());
       setShowNameModal(false);
       setGameStarted(true);
+
     }
   };
 
@@ -90,12 +93,14 @@ useEffect(() => {
     const curItem = items[currentIdx];
     const correct = selectedAnswer === curItem.correctAnswer;
     const responseTime = Date.now() - questionStartTime; // 新增
+    console.log(curItem)
 
     // 🆕 新增：創建答題記錄
     const answerRecord = {
       questionId: curItem.id || `q_${currentIdx}`,
       question: curItem.question,
       questionType: curItem.type,
+      item: curItem.item || null, // 如果有物品，則包含
       userAnswer: selectedAnswer,
       correctAnswer: curItem.correctAnswer,
       isCorrect: correct,
@@ -110,11 +115,16 @@ useEffect(() => {
     if (eventName && userId) {
       try {
         await saveDetailedAnswer(db, eventName, userId, answerRecord);
+        
+        setAnswers(prevAnswers => [...prevAnswers, answerRecord]);
+        
         //console.log('答題記錄儲存成功');
       } catch (error) {
         console.error('儲存失敗:', error);
       }
     }
+
+
 
     // 原有的邏輯保持不變
     setFeedback({
@@ -128,6 +138,7 @@ useEffect(() => {
     setTimeout(() => {
       setFeedback({ show: false, message: '', color: '' });
       setCurrentIdx(idx => idx + 1);
+      
     }, 1500);
   },
   [currentIdx, items, questionStartTime, db, eventName, userId, playerName, gender, age, sessionId] // 更新依賴項
@@ -197,7 +208,7 @@ useEffect(() => {
         
         {currentItem.type === QUIZ_TYPES.BIN_CLASSIFICATION ? (
           // 垃圾分類答案區 - 8個分類按鈕
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4 p-1">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-4 p-1">
             {binTypes.map(type => (
               <button
                 key={type}

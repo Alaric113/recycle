@@ -95,6 +95,18 @@ const handleExport = (type) => {
     );
   }
 
+  const handleAgeRange=(e) =>{
+    const age = parseInt(e);
+    if (age < 19) return "18歲以下";
+    if (age < 26) return "19-25歲";
+    if (age < 36) return "26-35歲";
+    if (age < 46) return "36-45歲";
+    if (age < 56) return "46-55歲";
+    if (age < 65) return "56-64歲";
+    if (age < 100) return "65歲以上";
+    return "-";
+  }
+
   return (
     <div className="h-full min-h-screen bg-gray-50 p-4 sm:p-6 flex flex-col" id="analytics-content">
       <div className="flex-1 max-w-7xl mx-auto bg-white rounded-lg shadow-lg w-full flex flex-col overflow-hidden">
@@ -330,7 +342,7 @@ const handleExport = (type) => {
                         <td className="px-4 py-3 text-sm">
                           {user.gender === 'male' ? '男' : user.gender === 'female' ? '女' : '其他'}
                         </td>
-                        <td className="px-4 py-3 text-sm">{user.age}歲</td>
+                        <td className="px-4 py-3 text-sm">{handleAgeRange(user.age)}</td>
                         
                         <td className="px-4 py-3 text-sm">
                           <span className={`px-2 py-1 rounded text-xs ${

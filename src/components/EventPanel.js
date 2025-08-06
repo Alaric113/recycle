@@ -5,7 +5,7 @@ import QuestionAnalytics from "./QuestionAnalytics";
 import QRCode from "qrcode";
 import QRCodeModal from "./QRCodeModal";
 import { updateEvent } from "../hooks/eventFirestore";
-import { exportParticipantsToPDF } from '../utils/exportUtils';
+
 
 const EventPanel = ({ db, onBackToStart }) => {
   const [events, setEvents] = useState([]);
@@ -261,6 +261,18 @@ const EventPanel = ({ db, onBackToStart }) => {
     setSelectedEvent(eventName);
     setError(null);
   };
+  
+  const handleAgeRange=(e) =>{
+    const age = parseInt(e);
+    if (age < 19) return "18歲以下";
+    if (age < 26) return "19-25歲";
+    if (age < 36) return "26-35歲";
+    if (age < 46) return "36-45歲";
+    if (age < 56) return "46-55歲";
+    if (age < 65) return "56-64歲";
+    if (age < 100) return "65歲以上";
+    return "-";
+  }
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "-";
@@ -547,7 +559,7 @@ const EventPanel = ({ db, onBackToStart }) => {
                                       </div>
                                       <div className="sm:hidden text-xs text-gray-500">
                                         {participant.gender || "未知"} •{" "}
-                                        {participant.age || "未知"}
+                                        {handleAgeRange(participant.age) || "未知"}
                                       </div>
                                     </div>
                                   </div>
@@ -556,7 +568,7 @@ const EventPanel = ({ db, onBackToStart }) => {
                                   <div>
                                     <div>{participant.gender}</div>
                                     <div className="text-xs">
-                                      {participant.age || "未知"}
+                                      {handleAgeRange(participant.age) || "未知"}
                                     </div>
                                   </div>
                                 </td>

@@ -45,6 +45,7 @@ const [reloadQNumTrigger, setReloadQNumTrigger] = useState(0);
   const [shouldCheckEvent, setShouldCheckEvent] = useState(false);
   const { eventExists, isChecking,done } = useEventValidator(db, detectedEventName, shouldCheckEvent,userId);
   const [ doCycle, setDoCycle] = useState(false);
+  const [answers, setAnswers] = useState([]); // 儲存答題記錄
 
   const getEventFromPath = () => {
     if (urlEventName) {
@@ -167,10 +168,12 @@ const [reloadQNumTrigger, setReloadQNumTrigger] = useState(0);
 
   const { items: allTrashItems, isLoading: isLoadingItems } = useFirestoreItems(db, appId, isAuthReady);
 
-  const handleGameEnd = useCallback((score, playerName,userId,[gender,age]) => {
+  const handleGameEnd = useCallback((score, playerName,userId,[gender,age],answers) => {
     setFinalScore(score);
     if (db && eventName && playerName && userId && [gender,age]) {
       saveScore(db, eventName, playerName, score, userId,gender,age);
+      setPlayerName(playerName);
+      setAnswers(answers); // 儲存答題記錄
     }
     setView('end');
   }, [db, eventName]);
@@ -262,7 +265,7 @@ const handleGoToStart = useCallback(async () => {
         return <Game onGameEnd={handleGameEnd} onGameCancel={handleGameCancel} allQuizItems={quizItems} userId={userId} eventName={eventName} setPlayerName={setPlayerName} playerName={playerName} doCycle={doCycle} db={db} questionNum={questionNum}/>;
       case 'end':
         
-        return <RoundCompleteScreen score={finalScore} onRestart={handleGoToStart} questionNum={questionNum} />;
+        return <RoundCompleteScreen score={finalScore} onRestart={handleGoToStart} questionNum={questionNum} playerName={playerName} answers={answers}/>;
       case 'admin':
         return <AdminPanel items={allTrashItems} db={db} appId={appId} onBackToStart={handleGoToStart} />;
       case 'admine':
