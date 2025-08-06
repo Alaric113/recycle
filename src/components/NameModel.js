@@ -1,5 +1,5 @@
 import React from "react";
-import { SegmentGroup } from "@chakra-ui/react";
+
 
 const CenteredModal = ({
   isOpen,
