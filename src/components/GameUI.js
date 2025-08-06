@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { getEventNames } from "../hooks/eventFirestore";
 import { ITEMS_PER_ROUND } from "../constants";
+import trashMan from "../img/trashman.png";
+import  InteractiveTrashMan  from "./TrashMan";
 
 /**
  * 分數顯示板組件
@@ -96,6 +98,12 @@ export const StartScreen = ({
       <p className="text-xl md:text-2xl text-white mb-8 drop-shadow">
         回答資源回收相關問題！
       </p>
+
+
+      <img
+        src={trashMan}
+        className="w-32 h-32 md:w-48 md:h-48 mb-6 "
+        />
 
       {isEventMode == "admin" && (
         <div className="flex items-center gap-2 mb-4">

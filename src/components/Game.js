@@ -5,6 +5,7 @@ import CenteredModal from './NameModel';
 import { saveDetailedAnswer } from '../hooks/answerAnalytics';
 import { QUIZ_TYPES, ITEMS_PER_ROUND, DEFAULT_QUIZ_ITEMS, TRASH_TYPES, BIN_EMOJIS } from '../constants';
 import { useGetEventQNUM } from '../hooks/useEventValidator';
+import {ProgressLine} from './progessLine';
 
 const BUTTONS_PER_ROW = 4;
 const binTypes = Object.values(TRASH_TYPES);
@@ -31,7 +32,8 @@ const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerN
   const [questionStartTime, setQuestionStartTime] = useState(null);
   const [sessionId] = useState(userId + '_' + Date.now());
   const [answers, setAnswers] = useState([]);
-
+  const [progressStat , setProgressStat] = useState([]);
+ 
   
   
   useEffect(() => {
@@ -94,6 +96,11 @@ useEffect(() => {
     const correct = selectedAnswer === curItem.correctAnswer;
     const responseTime = Date.now() - questionStartTime; // 新增
     console.log(curItem)
+    setProgressStat(prev => {
+      const newStat = [...prev]; 
+      newStat[currentIdx] = correct; // 更新當前題目的狀態
+      return newStat;
+    });
 
     // 🆕 新增：創建答題記錄
     const answerRecord = {
@@ -139,7 +146,7 @@ useEffect(() => {
       setFeedback({ show: false, message: '', color: '' });
       setCurrentIdx(idx => idx + 1);
       
-    }, 1500);
+    }, 800);
   },
   [currentIdx, items, questionStartTime, db, eventName, userId, playerName, gender, age, sessionId] // 更新依賴項
 );
@@ -147,7 +154,7 @@ useEffect(() => {
   // 如果還沒開始遊戲，顯示歡迎畫面
   if (!gameStarted) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8 bg-gradient-to-b from-blue-400 to-green-400">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8  from-blue-400 to-green-400">
         
         <CenteredModal
           isOpen={showNameModal}
@@ -181,6 +188,11 @@ useEffect(() => {
   const renderQuestionArea = () => {
     return (
       <div className="bg-black/10 rounded-lg p-8 mb-8 w-full max-w-2xl">
+        <ProgressLine
+            current={currentIdx + 1}
+            total={items.length}
+            progressStat={progressStat}
+          />
        
         
         {/* 問題文字 */}
@@ -251,8 +263,8 @@ useEffect(() => {
       </div>
       
       {/* 題目區域 */}
-      <div className="flex-shrink-0 flex items-center justify-center p-4 mt-9">
-        
+      <div className="flex-shrink-0 flex  items-center justify-center p-4 mt-9">
+          
           {renderQuestionArea()}
         
       </div>

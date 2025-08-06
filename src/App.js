@@ -6,6 +6,7 @@ import { getFirestore } from 'firebase/firestore';
 import { saveScore } from './hooks/eventFirestore';
 import { useEventValidator, useGetEventQNUM } from './hooks/useEventValidator';
 import { BrowserRouter, Routes, Route, useParams, useNavigate } from 'react-router-dom';
+import backgroundImg from './img/unnamed.png';
 /* global __app_id, __firebase_config, __initial_auth_token */
 
 // Styles
@@ -280,7 +281,10 @@ const handleGoToStart = useCallback(async () => {
   };
 
   return (
-    <div className="h-screen w-screen bg-gradient-to-b from-teal-500 to-cyan-800 font-sans overflow-hidden">
+    <div className="h-screen w-screen bg-cover bg-center from-teal-500 to-cyan-800 font-sans overflow-hidden"
+    style={{
+      backgroundImage: `url(${backgroundImg})`
+    }}>
       {/* 開發時的除錯資訊 */}
       
       
