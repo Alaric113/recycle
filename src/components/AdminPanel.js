@@ -4,6 +4,7 @@ import { TRASH_TYPES, QUIZ_TYPES } from "../constants";
 import Modal from "./Modal";
 import QuizModal from "./quizModal";
 import { type } from "@testing-library/user-event/dist/type";
+import { SkeletonLoader } from "./LoadingComponents";
 
 const AdminPanel = ({ items, onBackToStart, db, appId }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -164,16 +165,21 @@ const AdminPanel = ({ items, onBackToStart, db, appId }) => {
   };
 
   // 新增圖片壓縮函數
-  const compressImage = (file, maxWidth = 300, maxHeight = 300, quality = 0.8) => {
+  const compressImage = (
+    file,
+    maxWidth = 300,
+    maxHeight = 300,
+    quality = 0.8
+  ) => {
     return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
       const img = new Image();
-      
+
       img.onload = () => {
         // 計算新尺寸
         let { width, height } = img;
-        
+
         if (width > height) {
           if (width > maxWidth) {
             height = (height * maxWidth) / width;
@@ -185,80 +191,78 @@ const AdminPanel = ({ items, onBackToStart, db, appId }) => {
             height = maxHeight;
           }
         }
-        
+
         canvas.width = width;
         canvas.height = height;
-        
+
         // **重要：設定透明背景**
         ctx.clearRect(0, 0, width, height);
-        
+
         // 繪製圖片
         ctx.drawImage(img, 0, 0, width, height);
-        
+
         // **使用 PNG 格式保持透明度**
-        const compressedDataUrl = canvas.toDataURL('image/png');
+        const compressedDataUrl = canvas.toDataURL("image/png");
         resolve(compressedDataUrl);
       };
-      
+
       img.src = URL.createObjectURL(file);
     });
   };
-  
 
   const handleFileUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
 
-  // 檢查檔案類型
-  if (!file.type.startsWith('image/')) {
-    setModalMessage("請選擇圖片檔案！");
-    setShowAlertDialog(true);
-    return;
-  }
-
-  // 檢查原始檔案大小 (限制 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    setModalMessage("圖片檔案大小不能超過 5MB！");
-    setShowAlertDialog(true);
-    return;
-  }
-
-  setUploadProgress(10);
-  
-  try {
-    // 壓縮圖片
-    const compressedDataUrl = await compressImage(file, 200, 200, 0.6);
-    
-    // 檢查壓縮後的大小 (限制 100KB)
-    const compressedSize = compressedDataUrl.length * 0.75; // base64 轉回位元組的概估
-    if (compressedSize > 100 * 1024) {
-      setModalMessage("圖片壓縮後仍然太大，請選擇更小的圖片！");
+    // 檢查檔案類型
+    if (!file.type.startsWith("image/")) {
+      setModalMessage("請選擇圖片檔案！");
       setShowAlertDialog(true);
-      setUploadProgress(0);
       return;
     }
-    
-    setUploadProgress(90);
-    
-    // 將壓縮後的 data URL 存到 emoji 欄位
-    setCurrentItem(prev => ({
-      ...prev,
-      item: {
-        ...prev.item,
-        emoji: compressedDataUrl
+
+    // 檢查原始檔案大小 (限制 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setModalMessage("圖片檔案大小不能超過 5MB！");
+      setShowAlertDialog(true);
+      return;
+    }
+
+    setUploadProgress(10);
+
+    try {
+      // 壓縮圖片
+      const compressedDataUrl = await compressImage(file, 200, 200, 0.6);
+
+      // 檢查壓縮後的大小 (限制 100KB)
+      const compressedSize = compressedDataUrl.length * 0.75; // base64 轉回位元組的概估
+      if (compressedSize > 100 * 1024) {
+        setModalMessage("圖片壓縮後仍然太大，請選擇更小的圖片！");
+        setShowAlertDialog(true);
+        setUploadProgress(0);
+        return;
       }
-    }));
-    
-    setUploadProgress(100);
-    setTimeout(() => setUploadProgress(0), 500);
-    
-  } catch (error) {
-    console.error('圖片壓縮失敗:', error);
-    setModalMessage("圖片處理失敗，請重試！");
-    setShowAlertDialog(true);
-    setUploadProgress(0);
-  }
-};
+
+      setUploadProgress(90);
+
+      // 將壓縮後的 data URL 存到 emoji 欄位
+      setCurrentItem((prev) => ({
+        ...prev,
+        item: {
+          ...prev.item,
+          emoji: compressedDataUrl,
+        },
+      }));
+
+      setUploadProgress(100);
+      setTimeout(() => setUploadProgress(0), 500);
+    } catch (error) {
+      console.error("圖片壓縮失敗:", error);
+      setModalMessage("圖片處理失敗，請重試！");
+      setShowAlertDialog(true);
+      setUploadProgress(0);
+    }
+  };
 
   // 新增：清除圖片
   const clearUploadedImage = () => {
@@ -380,7 +384,9 @@ const AdminPanel = ({ items, onBackToStart, db, appId }) => {
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     檔案大小：
-                    {Math.round((currentItem.item.emoji.length * 0.75) / 1024)}{" "}
+                    {Math.round(
+                      (currentItem.item.emoji.length * 0.75) / 1024
+                    )}{" "}
                     KB
                   </p>
                 </div>
@@ -521,8 +527,14 @@ const AdminPanel = ({ items, onBackToStart, db, appId }) => {
               </button>
             </div>
           </div>
-          {!items || items.length === 0 ? (
-            <p className="text-gray-500">目前沒有題目</p>
+          {!items ? (
+            <SkeletonLoader rows={6} />
+          ) : items.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <div className="text-4xl mb-4">📝</div>
+              <p>目前沒有題目</p>
+              <p className="text-sm mt-2">建立新題目後會顯示在這裡</p>
+            </div>
           ) : (
             <div className="flex-1 h-full overflow-y-auto pb-20">
               {items.map((item) => (
@@ -537,7 +549,7 @@ const AdminPanel = ({ items, onBackToStart, db, appId }) => {
                     <div>
                       {item.item && (
                         <span className="ml-2 text-gray-700 flex flex-row gap-1">
-                          {item.item.type=== "pic" ? (
+                          {item.item.type === "pic" ? (
                             <img
                               src={item.item.emoji}
                               alt={item.item.name}

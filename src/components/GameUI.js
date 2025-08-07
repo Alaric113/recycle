@@ -226,9 +226,9 @@ export const RoundCompleteScreen = ({
             onClick={() => handleSelectChange(index)}
             className={`rounded-lg w-16 h-16  hover:bg-white/50 transition-colors flex flex-col items-center justify-center cursor-pointer shadow-sm m-1 ${
               answer.isCorrect
-                ? "bg-green-700/10 border-white/80 border-1"
+                ? "bg-green-700/10  border-1"
                 : "bg-red-400/80"
-            }`}
+            } ${index === selectIdx ? 'border-blue-500':'border-white/80'}`}
           >
             <p className="text-xl">{index + 1}</p>
             <p>{answer.isCorrect ? "✓" : "✗"}</p>
@@ -244,14 +244,14 @@ export const RoundCompleteScreen = ({
               {answers[selectIdx].item && (
                 <>
                   {/* 圖片或 emoji 顯示 */}
-                  <div className="mb-2">
+                  <div className="">
                     {answers[selectIdx].item.emoji &&
                     answers[selectIdx].item.emoji.startsWith("data:image") ? (
                       // 顯示上傳的圖片
                       <img
                         src={answers[selectIdx].item.emoji}
                         alt={answers[selectIdx].item.name}
-                        className="w-24 h-24 md:w-32 md:h-32 object-contain rounded-lg border-2 border-gray-200 shadow-sm"
+                        className="w-24 h-24 md:w-32 md:h-32 object-contain"
                       />
                     ) : (
                       // 顯示 emoji

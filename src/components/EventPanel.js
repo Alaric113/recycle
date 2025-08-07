@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { collection, getDocs, setDoc, doc ,getDoc } from "firebase/firestore";
+import { collection, getDocs, setDoc, doc, getDoc } from "firebase/firestore";
 import CenteredModal from "./eventNameModel";
 import QuestionAnalytics from "./QuestionAnalytics";
 import QRCode from "qrcode";
 import QRCodeModal from "./QRCodeModal";
 import { updateEvent } from "../hooks/eventFirestore";
-
+import { RecycleLoader } from "./LoadingComponents";
 
 const EventPanel = ({ db, onBackToStart }) => {
   const [events, setEvents] = useState([]);
@@ -261,8 +261,8 @@ const EventPanel = ({ db, onBackToStart }) => {
     setSelectedEvent(eventName);
     setError(null);
   };
-  
-  const handleAgeRange=(e) =>{
+
+  const handleAgeRange = (e) => {
     const age = parseInt(e);
     if (age < 19) return "18歲以下";
     if (age < 26) return "19-25歲";
@@ -272,7 +272,7 @@ const EventPanel = ({ db, onBackToStart }) => {
     if (age < 65) return "56-64歲";
     if (age < 100) return "65歲以上";
     return "-";
-  }
+  };
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "-";
@@ -361,9 +361,8 @@ const EventPanel = ({ db, onBackToStart }) => {
             {/* 滾動內容區域 */}
             <div className="flex-1 overflow-y-auto min-h-0">
               {loadingEvents ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                  <p className="mt-2 text-gray-600">載入活動中...</p>
+                <div className="flex-1 flex items-center justify-center">
+                  <RecycleLoader text="載入活動資料..." />
                 </div>
               ) : events.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
@@ -559,7 +558,8 @@ const EventPanel = ({ db, onBackToStart }) => {
                                       </div>
                                       <div className="sm:hidden text-xs text-gray-500">
                                         {participant.gender || "未知"} •{" "}
-                                        {handleAgeRange(participant.age) || "未知"}
+                                        {handleAgeRange(participant.age) ||
+                                          "未知"}
                                       </div>
                                     </div>
                                   </div>
@@ -568,7 +568,8 @@ const EventPanel = ({ db, onBackToStart }) => {
                                   <div>
                                     <div>{participant.gender}</div>
                                     <div className="text-xs">
-                                      {handleAgeRange(participant.age) || "未知"}
+                                      {handleAgeRange(participant.age) ||
+                                        "未知"}
                                     </div>
                                   </div>
                                 </td>
