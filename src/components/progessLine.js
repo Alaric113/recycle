@@ -44,7 +44,7 @@ export const ProgressLine = ({ current, total, stationNames = [],progressStat })
     
     
     return (
-        <div className="w-full pb-8 px-4 select-none">
+        <div className="w-full pb-4 px-4 select-none">
             <div className="relative">
                 {/* 主要進度條軌道 */}
                 <div className="w-full bg-gray-200/50 rounded-full h-3 shadow-inner">

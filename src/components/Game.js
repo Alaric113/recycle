@@ -188,16 +188,17 @@ useEffect(() => {
   const renderQuestionArea = () => {
     console.log(currentItem)
     return (
-      <div className="bg-green-800/30 rounded-lg p-8  w-full max-w-2xl">
+      <div className="bg-green-800/30 rounded-lg p-4  w-full max-w-2xl">
+        
+       
+        
+        {/* 問題文字 */}
+        <div className="text-2xl sm:text-4xl mb-1 text-center font-bold text-gray-800 pt-1">
         <ProgressLine
             current={currentIdx + 1}
             total={items.length}
             progressStat={progressStat}
           />
-       
-        
-        {/* 問題文字 */}
-        <div className="text-2xl sm:text-4xl mb-6 text-center font-bold text-gray-800 ">
           {currentItem.question}
         </div>
         
@@ -208,12 +209,12 @@ useEffect(() => {
               <img
                 src={currentItem.item.emoji}
                 alt={currentItem.item.name}
-                className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4 "
+                className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-2 "
               />
             ) : (
-              <span className="text-6xl sm:text-8xl mb-4">{currentItem.item.emoji}</span>
+              <span className="text-6xl sm:text-8xl mb-2">{currentItem.item.emoji}</span>
             )}
-            <span className="block mt-4 text-2xl font-semibold text-gray-700">
+            <span className="block mt-2 text-2xl font-semibold text-gray-700">
               {currentItem.item.name}
             </span>
           </div>
