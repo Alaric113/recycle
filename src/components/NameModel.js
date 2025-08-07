@@ -71,6 +71,9 @@ const CenteredModal = ({
               <label
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700 mb-2"
+                style={
+                  {fontSize:'16px'}
+                }
               >
                 姓名 *
               </label>

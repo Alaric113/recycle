@@ -33,6 +33,7 @@ export const useFirestoreItems = (db, appId, isAuthReady) => {
           if (existingDocsCheck.empty) {
             // 新增預設測驗題目
             for (const item of DEFAULT_QUIZ_ITEMS) {
+              
               await setDoc(doc(db, itemsCollectionRef.path, item.id), {
                 type: item.type,
                 question: item.question,

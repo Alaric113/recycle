@@ -2,14 +2,14 @@
 import React, { useState, useEffect } from "react";
 import { getEventNames } from "../hooks/eventFirestore";
 import { ITEMS_PER_ROUND } from "../constants";
-import trashMan from "../img/trashman.png";
-import  InteractiveTrashMan  from "./TrashMan";
+import trashMan from "../img/trashman/splash/trashman-splash-0.png";
+import { InteractiveTrashMan } from "./TrashMan";
 
 /**
  * 分數顯示板組件
  */
 export const Scoreboard = ({ score, eventName }) => (
-  <div className="absolute top-4 left-4 right-4 flex justify-between text-white text-2xl font-bold z-20 p-2 bg-black/50 bg-opacity-30 rounded-lg">
+  <div className="flex justify-between text-white text-2xl font-bold z-20 p-2 bg-black/50 bg-opacity-30 rounded-lg">
     <div>{eventName}</div>
     <div>分數: {score}</div>
   </div>
@@ -99,11 +99,7 @@ export const StartScreen = ({
         回答資源回收相關問題！
       </p>
 
-
-      <img
-        src={trashMan}
-        className="w-32 h-32 md:w-48 md:h-48 mb-6 "
-        />
+      <img src={trashMan} className="w-32 h-32 md:w-48 md:h-48 mb-6 " />
 
       {isEventMode == "admin" && (
         <div className="flex items-center gap-2 mb-4">
@@ -207,7 +203,7 @@ export const RoundCompleteScreen = ({
   answers,
 }) => {
   const [selectIdx, setSelectIdx] = useState(0);
-  console.log(answers);
+
   const handleSelectChange = (e) => {
     setSelectIdx(e);
   };
@@ -229,7 +225,9 @@ export const RoundCompleteScreen = ({
             key={index}
             onClick={() => handleSelectChange(index)}
             className={`rounded-lg w-16 h-16  hover:bg-white/50 transition-colors flex flex-col items-center justify-center cursor-pointer shadow-sm m-1 ${
-              answer.isCorrect ? "bg-green-600/80" : "bg-red-400/80"
+              answer.isCorrect
+                ? "bg-green-700/10 border-white/80 border-1"
+                : "bg-red-400/80"
             }`}
           >
             <p className="text-xl">{index + 1}</p>
@@ -238,23 +236,50 @@ export const RoundCompleteScreen = ({
         ))}
       </div>
       {answers[selectIdx] && (
-        <div className="rounded-lg bg-white/20 p-4 mb-4 shadow-lg flex flex-col">
+        <div className="rounded-lg bg-white/20 p-4 mb-4 shadow-lg flex flex-col border-white/80 border-1">
           <p className="text-xl mb-2">{answers[selectIdx].question}</p>
-          <p className="text-xl mb-2">
-            {answers[selectIdx].item &&
-              `${answers[selectIdx].item.emoji || ""} ${
-                answers[selectIdx].item.name || ""
-              }`}
-          </p>
+          <div className="text-center">
+            {/* 物品顯示區域 - 支援圖片和 emoji */}
+            <div className="flex flex-col items-center mb-4">
+              {answers[selectIdx].item && (
+                <>
+                  {/* 圖片或 emoji 顯示 */}
+                  <div className="mb-2">
+                    {answers[selectIdx].item.emoji &&
+                    answers[selectIdx].item.emoji.startsWith("data:image") ? (
+                      // 顯示上傳的圖片
+                      <img
+                        src={answers[selectIdx].item.emoji}
+                        alt={answers[selectIdx].item.name}
+                        className="w-24 h-24 md:w-32 md:h-32 object-contain rounded-lg border-2 border-gray-200 shadow-sm"
+                      />
+                    ) : (
+                      // 顯示 emoji
+                      <span className="text-6xl md:text-8xl">
+                        {answers[selectIdx].item.emoji}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 物品資訊文字 */}
+                  <p className="text-xl">
+                    {` ${
+                      answers[selectIdx].item.name || ""
+                    }`}
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
           <span
-            className={`rounded-lg  ${
+            className={`rounded-lg border-white/80 border-1 ${
               answers[selectIdx].isCorrect ? "bg-green-400/80" : "bg-red-400/80"
             } p-2 mb-2`}
           >
             {answers[selectIdx].userAnswer}
           </span>
           <span
-            className={`bg-green-400/40 p-2 mb-2 rounded-lg ${
+            className={`bg-green-400/40 p-2 mb-2 rounded-lg border-white/80 border-1 ${
               answers[selectIdx].isCorrect ? "hidden" : "block"
             }`}
           >
@@ -263,7 +288,7 @@ export const RoundCompleteScreen = ({
           <p>
             <span
               className={`font-bold ${
-                answers[selectIdx].isCorrect ? "text-green-300" : "text-red-800"
+                answers[selectIdx].isCorrect ? "text-green-700" : "text-red-800"
               }`}
             >
               {answers[selectIdx].isCorrect ? " ✓ 正確" : " ✗ 錯誤"}

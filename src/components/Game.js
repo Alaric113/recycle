@@ -186,8 +186,9 @@ useEffect(() => {
 
   // 渲染題目區域
   const renderQuestionArea = () => {
+    console.log(currentItem)
     return (
-      <div className="bg-black/10 rounded-lg p-8 mb-8 w-full max-w-2xl">
+      <div className="bg-green-800/30 rounded-lg p-8  w-full max-w-2xl">
         <ProgressLine
             current={currentIdx + 1}
             total={items.length}
@@ -196,14 +197,22 @@ useEffect(() => {
        
         
         {/* 問題文字 */}
-        <div className="text-2xl sm:text-4xl mb-6 text-center font-bold text-gray-800">
+        <div className="text-2xl sm:text-4xl mb-6 text-center font-bold text-gray-800 ">
           {currentItem.question}
         </div>
         
         {/* 如果是垃圾分類題，顯示物品 */}
         {currentItem.type === QUIZ_TYPES.BIN_CLASSIFICATION && currentItem.item && (
           <div className="text-center">
-            <span className="text-6xl">{currentItem.item.emoji}</span>
+            {currentItem.item.type === 'pic' ? (
+              <img
+                src={currentItem.item.emoji}
+                alt={currentItem.item.name}
+                className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4 "
+              />
+            ) : (
+              <span className="text-6xl sm:text-8xl mb-4">{currentItem.item.emoji}</span>
+            )}
             <span className="block mt-4 text-2xl font-semibold text-gray-700">
               {currentItem.item.name}
             </span>
@@ -216,7 +225,7 @@ useEffect(() => {
   // 渲染答案區域
   const renderAnswerArea = () => {
     return (
-      <div className=" rounded-lg p-1 w-full max-w-2xl ">
+      <div className=" rounded-lg p-1 w-full max-w-2xl transform transition ease-in-out duration-300">
         
         {currentItem.type === QUIZ_TYPES.BIN_CLASSIFICATION ? (
           // 垃圾分類答案區 - 8個分類按鈕
@@ -255,15 +264,16 @@ useEffect(() => {
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col justify-between p-2 sm:p-4">
+    <div className="w-full min-h-screen flex flex-col justify-between  p-2 sm:p-4">
       
-      <div className="flex-shrink-0 mb-6" >
+      <div className=" mt-2 " >
         <Scoreboard score={score} itemsLeft={items.length - currentIdx} eventName={eventName} />
 
       </div>
       
       {/* 題目區域 */}
-      <div className="flex-shrink-0 flex  items-center justify-center p-4 mt-9">
+      <div className="flex  items-center justify-center p-4 
+      ">
           
           {renderQuestionArea()}
         
@@ -271,7 +281,10 @@ useEffect(() => {
       
       
       {/* 答案區域 */}
-      <div className="flex flex-wrap  justify-center items-center p-2 bg-black/30 rounded-xl gap-2 sm:gap-2 mb-10 md:mb-1">
+      <div className="flex  flex-wrap  justify-center items-center p-2 bg-black/30 rounded-xl gap-2 sm:gap-2 md:mb-1"
+      style={{
+        marginBottom: `max(2.5rem, calc(env(safe-area-inset-bottom) + 1rem))`
+      }}>
         {renderAnswerArea()}
       </div>
       

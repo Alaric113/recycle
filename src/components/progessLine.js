@@ -1,42 +1,50 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import PropTypes from 'prop-types';
 import trashCar from '../img/trashcar.png';
+
+const ANIMATION_DURATION = 700;
+
+const calculatePosition = (index, total) => {
+  return total > 1 ? (index / (total - 1)) * 100 : 0;
+};
+
+const createStationData = (index, current, total, stationNames, progressStat) => ({
+    id: index + 1,
+    position: calculatePosition(index, total),
+    isCorrect: progressStat?.[index] || false,
+    isActive: index + 1 <= current,
+    isCurrent: index + 1 === current,
+    isCompleted: index + 1 < current,
+    name: stationNames?.[index] || `第${index + 1}題`
+  });
 
 export const ProgressLine = ({ current, total, stationNames = [],progressStat }) => {
     const [progress, setProgress] = useState(0);
     const [isMoving, setIsMoving] = useState(false);
+
+    const stations = useMemo(() => {
+        return Array.from({ length: total }, (_, i) => 
+          createStationData(i, current, total, stationNames, progressStat)
+        );
+      }, [current, total, stationNames, progressStat]);
     
-    useEffect(() => {
+      useEffect(() => {
+        if (total <= 0 || current < 0) return;
+    
         setIsMoving(true);
-        setTimeout(() => setIsMoving(false), 700);
-        
-        // 計算進度百分比
         const progressPercent = current > 0 ? ((current - 1) / (total - 1)) * 100 : 0;
         setProgress(progressPercent);
-    }, [current, total]);
     
-    // 生成站牌資料
-    const generateStations = () => {
-        const stations = [];
-        for (let i = 0; i < total; i++) {
-            const position = total > 1 ? (i / (total - 1)) * 100 : 0;
-            stations.push({
-                id: i + 1,
-                position: position,
-                isCorrect: progressStat[i]||false,
-                isActive: i + 1 <= current,
-                isCurrent: i + 1 === current,
-                isCompleted: i + 1 < current,
-                name: stationNames[i] || `第${i + 1}題`
-            });
-        }
-        console.log(stations)
-        return stations;
-    };
+        const timer = setTimeout(() => setIsMoving(false), ANIMATION_DURATION);
+        return () => clearTimeout(timer);
+      }, [current, total]);
     
-    const stations = generateStations();
+    
+    
+    
     
     return (
-        <div className="w-full pb-12 px-4 select-none">
+        <div className="w-full pb-8 px-4 select-none">
             <div className="relative">
                 {/* 主要進度條軌道 */}
                 <div className="w-full bg-gray-200/50 rounded-full h-3 shadow-inner">

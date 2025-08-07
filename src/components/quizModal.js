@@ -38,7 +38,7 @@ const QuizModal = ({
               ...prev,
               type: e.target.value,
               question: '',
-              item: { emoji: '', name: '' },
+              item: { type:'',emoji: '', name: '' },
               options: ['', ''],
               correctAnswer: ''
             }))}
