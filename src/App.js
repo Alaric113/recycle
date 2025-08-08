@@ -58,7 +58,7 @@ function GameApp() {
   );
   const [detectedEventName, setDetectedEventName] = useState(null);
   const [mode, setMode] = useState("");
-  const { questionNum } = useGetEventQNUM(db, eventName, reloadQNumTrigger);
+  const { questionNum,desc } = useGetEventQNUM(db, eventName, reloadQNumTrigger);
   const [shouldCheckEvent, setShouldCheckEvent] = useState(false);
   const { eventExists, isChecking, done } = useEventValidator(
     db,
@@ -68,7 +68,7 @@ function GameApp() {
   );
   const [doCycle, setDoCycle] = useState(false);
   const [answers, setAnswers] = useState([]); // 儲存答題記錄
-
+  
   const getEventFromPath = () => {
     if (urlEventName) {
       const decodedEventName = decodeURIComponent(urlEventName);
@@ -347,6 +347,7 @@ function GameApp() {
             doCycle={doCycle}
             onGoToAdminPage={handleGoToAdminPage}
             questionNum={questionNum}
+            desc ={desc}
           />
         );
     }

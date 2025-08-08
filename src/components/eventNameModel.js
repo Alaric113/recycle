@@ -3,7 +3,7 @@ const CenteredModal = ({
   isOpen, onClose, title, onSubmit,
   inputValue, setInputValue,
   inputQValue, setInputQValue,
-  inputDesc, setInputDesc,             // ➜ 新增：描述
+  desc, setDesc,             // ➜ 新增：描述
   showCancelButton = false,
   cancelText = '取消',
   submitText = '確認'
@@ -38,7 +38,16 @@ const CenteredModal = ({
         )}
 
         {/* 描述欄位（選用） */}
-        
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          祝賀詞  
+        </label>
+        {setInputQValue && (
+          <input type="text" min={1}
+                 className="w-full border rounded px-2 py-1"
+                 placeholder="ex:父親節快樂"
+                 value={desc}
+                 onChange={e => setDesc(e.target.value)} />
+        )}
 
         <div className="flex justify-end gap-2 pt-2">
           {showCancelButton && (

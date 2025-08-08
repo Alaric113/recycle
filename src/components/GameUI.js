@@ -1,9 +1,10 @@
 // --- File: src/components/GameUI.js ---
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect ,useRef } from "react";
 import { getEventNames } from "../hooks/eventFirestore";
 import { ITEMS_PER_ROUND } from "../constants";
 import trashMan from "../img/trashman/splash/trashman-splash-0.png";
-import InteractiveTrashMan  from "./TrashMan";
+import { InteractiveTrashMan, TRASHMAN_STATES } from './TrashMan';
+
 
 /**
  * 分數顯示板組件
@@ -31,14 +32,16 @@ export const StartScreen = ({
   done,
   doCycle,
   onGoToAdminPage,
+  desc
 }) => {
   const [eventNames, setEventNames] = useState([]);
   const [touchCount, setTouchCount] = useState(0);
   const [showAdminBtn, setShowAdminBtn] = useState(false);
-
+  
   const [errorMessage, setErrorMessage] = useState("");
   const [eventName, setEventNameState] = useState(""); // 新增 eventName 狀態
-
+  const trashManRef = useRef(null)
+  
   useEffect(() => {
     const fetchEventNames = async () => {
       const names = await getEventNames(db);
@@ -50,10 +53,19 @@ export const StartScreen = ({
   useEffect(() => {
     if (isEventMode && eventExists && detectedEventName) {
       setEventNameState(detectedEventName);
+      
+      trashManRef.current?.celebrate(desc);
+    }
+    if (isEventMode === 'none'){
+      trashManRef.current?.showSadness('沒有此活動喔! 再試試看吧!');
     }
   });
 
   const handleStart = () => {
+    if(isEventMode === 'none'){
+      trashManRef.current?.showSadness('沒有此活動喔! 再試試看吧!');
+      return
+    }
     if (!eventNames.includes(eventName) || !eventName.trim()) {
       setErrorMessage("請選擇或新增活動名稱！");
       setTimeout(() => {
@@ -68,10 +80,16 @@ export const StartScreen = ({
       }, 2000);
       return;
     }
+    
     setErrorMessage("");
-    console.log("開始遊戲，選擇的活動名稱:", eventName);
+    
     setEventName(eventName);
-    onStart();
+    trashManRef.current?.celebrate('準備開始吧!');
+    setTimeout(() => {
+      onStart();
+    }, 1000);
+    
+    
   };
 
   const handleBadgeClick = () => {
@@ -83,6 +101,8 @@ export const StartScreen = ({
       return next;
     });
   };
+
+ 
   useEffect(() => {
     if (touchCount === 0 || showAdminBtn) return;
 
@@ -98,7 +118,9 @@ export const StartScreen = ({
       <p className="text-xl md:text-2xl text-white mb-8 drop-shadow">
         回答資源回收相關問題！
       </p>
-      <InteractiveTrashMan/>
+      <InteractiveTrashMan
+        ref = {trashManRef}
+      />
       
 
       {isEventMode == "admin" && (
@@ -145,7 +167,7 @@ export const StartScreen = ({
 
       <button
         onClick={handleStart}
-        disabled={isEventMode === "none"}
+        
         className={` px-8 py-4 text-white font-bold rounded-full text-3xl shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 mb-6 border-b-4
     ${
       isEventMode === "none"

@@ -1,4 +1,5 @@
 import React from "react";
+import InteractiveTrashMan from "./TrashMan";
 
 
 const CenteredModal = ({
@@ -61,6 +62,7 @@ const CenteredModal = ({
 
   return (
     <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
+      
       <div className="bg-white rounded-lg p-6 w-80 sm:w-128 max-w-lg mx-4">
         <h2 className="text-xl font-bold mb-4 text-center">{title}</h2>
 

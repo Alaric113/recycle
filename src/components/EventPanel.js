@@ -29,6 +29,7 @@ const EventPanel = ({ db, onBackToStart }) => {
   const [editEventName, setEditEventName] = useState("");
   const [editNumQuestions, setEditNumQuestions] = useState(5);
   const [editDesc, setEditDesc] = useState("");
+  const [desc,setDesc] = useState('')
 
   const handleShowDetailedAnalytics = (eventName) => {
     setAnalyticsEventName(eventName);
@@ -156,7 +157,7 @@ const EventPanel = ({ db, onBackToStart }) => {
       const eventsCollectionRef = collection(db, "events");
       await setDoc(doc(eventsCollectionRef, newEventName.trim()), {
         createdAt: new Date(),
-        description: `${newEventName.trim()} 垃圾分類測驗活動`,
+        description: desc,
         questionNUm: numQuestions, // 儲存題目數量
       });
 
@@ -188,6 +189,7 @@ const EventPanel = ({ db, onBackToStart }) => {
       setEditNumQuestions(data.questionNum || 5);
       setEditDesc(data.description || "");
       setShowEditModal(true);
+      console.log(data.description)
     } catch (e) {
       alert("讀取活動資料失敗");
     }
@@ -321,6 +323,8 @@ const EventPanel = ({ db, onBackToStart }) => {
           setInputValue={setNewEventName}
           inputQValue={numQuestions}
           setInputQValue={setNumQuestions}
+          desc={desc}
+          setDesc={setDesc}
           showCancelButton={true}
         />
 
@@ -333,8 +337,8 @@ const EventPanel = ({ db, onBackToStart }) => {
           setInputValue={() => {}} // 名稱鎖定，不能改
           inputQValue={editNumQuestions}
           setInputQValue={setEditNumQuestions}
-          inputDesc={editDesc}
-          setInputDesc={setEditDesc}
+          desc={editDesc}
+          setDesc={setEditDesc}
           showCancelButton
           submitText="儲存"
         />

@@ -9,6 +9,7 @@ export const useEventValidator = (db, eventName, shouldCheck, uid) => {
   const [done, setDone] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [questionNum, setQuestionNum] = useState(0);
+  
 
   useEffect(() => {
     if (!db || !eventName || !shouldCheck || !uid) return;
@@ -43,6 +44,7 @@ export const useEventValidator = (db, eventName, shouldCheck, uid) => {
 export const useGetEventQNUM = (db, eventName) => {
   
   const [questionNum, setQuestionNum] = useState(0);
+  const [desc,setDesc] = useState('')
   useEffect(() => {
     if (!db || !eventName) return;
 
@@ -52,11 +54,13 @@ export const useGetEventQNUM = (db, eventName) => {
       if (snap.exists()) {
         
         setQuestionNum(snap.data().questionNum);
+        setDesc(snap.data().description)
       }
     };
+  
 
     fetchQuestionNum();
-  }, [db,eventName,questionNum]);
+  }, [db,eventName,questionNum,desc]);
 
-  return { questionNum };
+  return { questionNum,desc };
 }
