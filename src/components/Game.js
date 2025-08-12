@@ -188,12 +188,12 @@ useEffect(() => {
   const renderQuestionArea = () => {
     console.log(currentItem)
     return (
-      <div className="bg-green-800/30 rounded-lg p-4  w-full max-w-2xl">
+      <div className="bg-green-800/30 rounded-2xl p-4  w-full max-w-2xl backdrop-blur-md border border-white/20">
         
        
         
         {/* 問題文字 */}
-        <div className="text-2xl sm:text-4xl mb-1 text-center font-bold text-gray-800 pt-1">
+        <div className="text-2xl sm:text-4xl mb-1 text-center font-bold text-white pt-1">
         <ProgressLine
             current={currentIdx + 1}
             total={items.length}
@@ -214,7 +214,7 @@ useEffect(() => {
             ) : (
               <span className="text-6xl sm:text-8xl mb-2">{currentItem.item.emoji}</span>
             )}
-            <span className="block mt-2 text-2xl font-semibold text-gray-700">
+            <span className="block mt-2 text-2xl font-semibold text-white">
               {currentItem.item.name}
             </span>
           </div>
@@ -226,7 +226,7 @@ useEffect(() => {
   // 渲染答案區域
   const renderAnswerArea = () => {
     return (
-      <div className=" rounded-lg p-1 w-full max-w-2xl transform transition ease-in-out duration-300">
+      <div className=" rounded-2xl p-1 w-full max-w-2xl transform transition ease-in-out duration-300">
         
         {currentItem.type === QUIZ_TYPES.BIN_CLASSIFICATION ? (
           // 垃圾分類答案區 - 8個分類按鈕
@@ -234,12 +234,12 @@ useEffect(() => {
             {binTypes.map(type => (
               <button
                 key={type}
-                className="bg-white/30 hover:bg-blue-100 border-2 border-blue-300 rounded-lg p-1 text-xl transition flex flex-col items-center justify-center disabled:opacity-50 shadow-sm min-h-[80px] sm:min-h-[100px] md:min-h-[120px]"
+                className=" backdrop-blur-sm  hover:bg-blue-100 border-2 border-white/20 rounded-2xl p-1 text-xl transition-all duration-300 ease-out transform hover:scale-105  hover:shadow-xl flex flex-col items-center justify-center disabled:opacity-50 shadow-sm min-h-[80px] sm:min-h-[100px] md:min-h-[120px]"
                 disabled={feedback.show}
                 onClick={() => handleAnswer(type)}
               >
-                <span className="text-3xl sm:text-4xl md:text-5xl mb-1">{BIN_EMOJIS?.[type]}</span>
-                <span className="text-base  font-bold text-center leading-tight">{type}</span>
+                <span className="text-3xl text-white sm:text-4xl md:text-5xl mb-1">{BIN_EMOJIS?.[type]}</span>
+                <span className="text-base text-white font-bold text-center leading-tight">{type}</span>
               </button>
             ))}
           </div>
@@ -282,7 +282,7 @@ useEffect(() => {
       
       
       {/* 答案區域 */}
-      <div className="flex  flex-wrap  justify-center items-center p-2 bg-black/30 rounded-xl gap-2 sm:gap-2 md:mb-1"
+      <div className="flex  flex-wrap  justify-center items-center backdrop-blur-md p-2 bg-black/30 rounded-2xl gap-2 sm:gap-2 md:mb-1"
       style={{
         marginBottom: `max(2.5rem, calc(env(safe-area-inset-bottom) + 1rem))`
       }}>

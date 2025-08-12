@@ -61,10 +61,10 @@ const CenteredModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50">
       
-      <div className="bg-white rounded-lg p-6 w-80 sm:w-128 max-w-lg mx-4">
-        <h2 className="text-xl font-bold mb-4 text-center">{title}</h2>
+      <div className="bg-white/20 backdrop-blur-md border border-white/20 rounded-3xl p-6 w-80 sm:w-128 max-w-lg mx-4">
+        <h2 className="text-xl text-white font-bold mb-4 text-center">{title}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4 ">
           {/* 姓名輸入 */}
@@ -72,7 +72,7 @@ const CenteredModal = ({
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-medium text-white mb-2"
                 style={
                   {fontSize:'16px'}
                 }
@@ -84,7 +84,7 @@ const CenteredModal = ({
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full text-sm px-3 py-2 border bg-white border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="請輸入您的姓名"
                 required
               />
@@ -92,7 +92,7 @@ const CenteredModal = ({
             <div className="flex-shrink-0 mr-2 ">
               <label
                 htmlFor="gender"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-medium text-white mb-2"
               >
                 性別 *
               </label>
@@ -121,7 +121,7 @@ const CenteredModal = ({
 
             {/* 年齡輸入 */}
 
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-white mb-2">
               年齡範圍
             </label>
             <div className="bg-gray-100 p-1 rounded-2xl">
@@ -158,7 +158,7 @@ const CenteredModal = ({
               type="submit"
               className={`${
                 showCancelButton ? "flex-1" : "w-full"
-              } bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors font-medium`}
+              } bg-blue-600 text-white border border-white/20 py-2 px-4 rounded-md hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors font-medium`}
             >
               {submitText}
             </button>

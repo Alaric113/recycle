@@ -355,11 +355,18 @@ function GameApp() {
 
   return (
     <div
-      className="h-screen w-screen bg-cover bg-center from-teal-500 to-cyan-800 font-sans overflow-hidden"
-      style={{
-        backgroundImage: `url(${backgroundImg})`,
-      }}
+      className="h-screen w-screen bg-cover bg-center bg-gradient-to-br from-purple-600 via-blue-600 to-emerald-500 font-sans overflow-hidden backdrop-blur"
+      //style={{
+        //backgroundImage: `url(${backgroundImg})`
+        
+      //}}
     >
+      <div className="absolute inset-0">
+        <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full animate-float" />
+        <div className="absolute top-32 right-16 w-16 h-16 bg-white/5 rounded-full animate-float-delayed" />
+        <div className="absolute bottom-20 left-20 w-24 h-24 bg-white/10 rounded-full animate-float" />
+        <div className="absolute bottom-32 right-32 w-12 h-12 bg-white/5 rounded-full animate-float-delayed" />
+      </div>
       {/* 開發時的除錯資訊 */}
 
       {renderView()}
