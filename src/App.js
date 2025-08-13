@@ -18,7 +18,6 @@ import {
   useNavigate,
 } from "react-router-dom";
 import backgroundImg from "./img/unnamed.png";
-/* global __app_id, __firebase_config, __initial_auth_token */
 
 // Styles
 import "./index.css";
@@ -32,7 +31,106 @@ import Game from "./components/Game";
 import AdminPanel from "./components/AdminPanel";
 import EventPanel from "./components/EventPanel";
 import Password from "./components/Password";
-import { TrashCanLoader,RecycleLoader } from "./components/LoadingComponents";
+import { TrashCanLoader, RecycleLoader } from "./components/LoadingComponents";
+
+// 新增：滑動方向常數
+const SLIDE_DIRECTIONS = {
+  LEFT: 'left',
+  RIGHT: 'right',
+  UP: 'up',
+  DOWN: 'down',
+  NONE: 'none'
+};
+
+// 新增：過渡效果類型
+const TRANSITION_TYPES = {
+  SLIDE: 'slide',
+  FADE: 'fade',
+  SCALE: 'scale',
+  FLIP: 'flip'
+};
+
+// 新增：優化的滑動切換容器組件
+const SlideTransitionContainer = ({ 
+  children, 
+  isTransitioning, 
+  slideDirection = SLIDE_DIRECTIONS.RIGHT,
+  transitionType = TRANSITION_TYPES.SLIDE,
+  duration = 500,
+  className = "",
+  backgroundGradient = "from-purple-600 via-blue-600 to-emerald-500"
+}) => {
+  
+  // 獲取過渡樣式
+  const getTransitionStyle = () => {
+    const baseClasses = "absolute inset-0 w-full h-full transition-all ease-in-out";
+    const durationClass = `duration-${duration}`;
+    
+    if (!isTransitioning) {
+      return `${baseClasses} ${durationClass} transform translate-x-0 translate-y-0 opacity-100 scale-100`;
+    }
+
+    switch (transitionType) {
+      case TRANSITION_TYPES.SLIDE:
+        const slideTransform = {
+          [SLIDE_DIRECTIONS.LEFT]: 'translate-x-full opacity-90',
+          [SLIDE_DIRECTIONS.RIGHT]: '-translate-x-full opacity-90',
+          [SLIDE_DIRECTIONS.UP]: 'translate-y-full opacity-90',
+          [SLIDE_DIRECTIONS.DOWN]: '-translate-y-full opacity-90'
+        };
+        return `${baseClasses} ${durationClass} transform ${slideTransform[slideDirection]}`;
+      
+      case TRANSITION_TYPES.FADE:
+        return `${baseClasses} ${durationClass} opacity-0 scale-95`;
+      
+      case TRANSITION_TYPES.SCALE:
+        return `${baseClasses} ${durationClass} opacity-0 scale-75`;
+      
+      case TRANSITION_TYPES.FLIP:
+        return `${baseClasses} ${durationClass} opacity-0 transform scale-x-0`;
+      
+      default:
+        return `${baseClasses} ${durationClass} transform translate-x-0 translate-y-0 opacity-100`;
+    }
+  };
+
+  return (
+    <div className={`relative h-screen w-screen bg-gradient-to-br ${backgroundGradient} font-sans overflow-hidden ${className}`}>
+      {/* 背景效果層 */}
+      <div className="absolute inset-0 backdrop-blur-sm bg-black/5" />
+      
+      {/* 動態背景粒子效果 - 可選，如果覺得太花俏可以移除 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+        <div className="absolute -top-4 -left-4 w-72 h-72 bg-white rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-float" />
+        <div className="absolute -bottom-8 -right-4 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-float-delayed" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse" />
+      </div>
+      
+      {/* 頁面內容容器 */}
+      <div className={getTransitionStyle()}>
+        {children}
+      </div>
+      
+      {/* 添加自定義 CSS 動畫 */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes float-delayed {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-30px); }
+        }
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+        .animate-float-delayed {
+          animation: float-delayed 8s ease-in-out infinite;
+        }
+      `}</style>
+    </div>
+  );
+};
 
 /**
  * 主應用程式組件，管理遊戲的不同視圖
@@ -51,6 +149,14 @@ function GameApp() {
   const [firebaseError, setFirebaseError] = useState(null);
   const [playerName, setPlayerName] = useState("");
   const [eventName, setEventName] = useState("默認測驗");
+  const [nextPage, setNextPage] = useState(null);
+  
+  // 優化：使用新的狀態管理
+  const [slideDirection, setSlideDirection] = useState(SLIDE_DIRECTIONS.RIGHT);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionType, setTransitionType] = useState(TRANSITION_TYPES.SLIDE);
+  const [currentPage, setCurrentPage] = useState('start');
+  
   const { items: quizItems, isLoading } = useFirestoreItems(
     db,
     appId,
@@ -58,7 +164,11 @@ function GameApp() {
   );
   const [detectedEventName, setDetectedEventName] = useState(null);
   const [mode, setMode] = useState("");
-  const { questionNum,desc } = useGetEventQNUM(db, eventName, reloadQNumTrigger);
+  const { questionNum, desc } = useGetEventQNUM(
+    db,
+    eventName,
+    reloadQNumTrigger
+  );
   const [shouldCheckEvent, setShouldCheckEvent] = useState(false);
   const { eventExists, isChecking, done } = useEventValidator(
     db,
@@ -68,7 +178,8 @@ function GameApp() {
   );
   const [doCycle, setDoCycle] = useState(false);
   const [answers, setAnswers] = useState([]); // 儲存答題記錄
-  
+
+  // ... 保持原有的 useEffect 邏輯不變 ...
   const getEventFromPath = () => {
     if (urlEventName) {
       const decodedEventName = decodeURIComponent(urlEventName);
@@ -79,6 +190,7 @@ function GameApp() {
     setMode("none");
     return null;
   };
+
   useEffect(() => {
     const eventFromPath = getEventFromPath();
 
@@ -90,7 +202,7 @@ function GameApp() {
     if (eventFromPath) {
       setDetectedEventName(eventFromPath);
       setEventName(eventFromPath);
-      setShouldCheckEvent(true); // 觸發活動驗證
+      setShouldCheckEvent(true);
       console.log(`🔍 檢測到活動，準備驗證: ${eventFromPath}`);
     } else {
       setDetectedEventName(null);
@@ -119,9 +231,6 @@ function GameApp() {
   // Firebase 初始化和認證
   useEffect(() => {
     try {
-      // 安全地讀取環境變數，並提供後備值
-
-      // 提供一個後備的 Firebase 設定物件，以避免在本地開發時出錯
       const firebaseConfig = {
         apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
         authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -131,7 +240,6 @@ function GameApp() {
         appId: process.env.REACT_APP_FIREBASE_APP_ID,
       };
 
-      // 驗證必要的設定項目
       if (!firebaseConfig.projectId || !firebaseConfig.apiKey) {
         throw new Error("Firebase 設定不完整，請檢查環境變數。");
       }
@@ -146,14 +254,12 @@ function GameApp() {
       setDb(firestore);
       setAuth(authInstance);
 
-      // 監聽認證狀態
       const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
         if (user) {
           setUserId(user.uid);
           setIsAuthReady(true);
         } else {
           try {
-            // 讀取認證 token
             const token = process.env.REACT_APP_INITIAL_AUTH_TOKEN;
 
             if (token) {
@@ -195,32 +301,36 @@ function GameApp() {
       if (db && eventName && playerName && userId && [gender, age]) {
         saveScore(db, eventName, playerName, score, userId, gender, age);
         setPlayerName(playerName);
-        setAnswers(answers); // 儲存答題記錄
+        setAnswers(answers);
       }
+      changePage('end', SLIDE_DIRECTIONS.LEFT); // 更新：使用新的切換函數
       setView("end");
     },
     [db, eventName]
   );
 
   const handleRestart = useCallback(() => {
+    changePage('playing', SLIDE_DIRECTIONS.LEFT);
     setView("playing");
   }, []);
 
   const handleGoToAdmin = useCallback(() => {
+    changePage('admin', SLIDE_DIRECTIONS.RIGHT);
     setView("admin");
   }, []);
 
   const handleGoToAdminE = useCallback(() => {
+    changePage('admine', SLIDE_DIRECTIONS.RIGHT);
     setView("admine");
   }, []);
 
   const handleGoToAdminPage = useCallback(() => {
+    changePage('password', SLIDE_DIRECTIONS.RIGHT);
     setView("password");
   }, []);
 
   const handleGoToStart = useCallback(async () => {
     try {
-      // 檢查是否為特殊模式需要刷新 UID
       const shouldRefreshUID =
         urlCycle === "cycle" ||
         mode === "admin" ||
@@ -231,44 +341,60 @@ function GameApp() {
           `🔄 檢測到 ${urlCycle === "cycle" ? "cycle" : "admin"} 模式，刷新 UID`
         );
 
-        // 登出現有用戶
         if (auth.currentUser) {
           await auth.signOut();
           console.log("已登出用戶:", auth.currentUser?.uid);
         }
 
-        // 強制創建新的匿名用戶
         const userCredential = await signInAnonymously(auth);
         const newUID = userCredential.user.uid;
         setUserId(newUID);
 
         console.log("🆕 遊戲結束後生成新 UID:", newUID);
 
-        // 重置遊戲狀態
         setFinalScore(0);
         setPlayerName("");
         setReloadQNumTrigger((prev) => prev + 1);
       }
-
+      changePage('start', SLIDE_DIRECTIONS.RIGHT);
       setView("start");
     } catch (error) {
       console.error("返回主畫面時刷新 UID 失敗:", error);
-      // 即使刷新失敗也要回到主畫面
+      changePage('start', SLIDE_DIRECTIONS.RIGHT);
       setView("start");
     }
   }, [urlCycle, mode, detectedEventName, auth]);
 
   const handleGameCancel = () => {
-    setView("start"); // 回到開始畫面
+    setView("start");
+    changePage('start', SLIDE_DIRECTIONS.LEFT);
     console.log("使用者取消了遊戲");
   };
 
   const handleAuthenticated = () => {
     setMode("admin");
+    changePage('start', SLIDE_DIRECTIONS.RIGHT);
     setView("start");
   };
 
-  const renderView = () => {
+  // 優化：新的頁面切換函數
+  const changePage = useCallback((newPage, direction = SLIDE_DIRECTIONS.RIGHT, transition = TRANSITION_TYPES.SLIDE) => {
+    if(isTransitioning) return
+    
+    setIsTransitioning(true);
+    setSlideDirection(direction);
+    setTransitionType(transition);
+    setNextPage(newPage);
+    
+    setTimeout(() => {
+      setCurrentPage(newPage);
+      setView(newPage); // 同步更新 view 狀態
+      setIsTransitioning(false);
+    }, 500);
+  }, []);
+
+  // 渲染當前頁面內容
+  const renderCurrentPage = () => {
     if (!isAuthReady || isLoadingItems) {
       return (
         <div className="flex items-center justify-center h-full">
@@ -286,7 +412,7 @@ function GameApp() {
       );
     }
 
-    switch (view) {
+    switch (currentPage) {
       case "playing":
         return (
           <Game
@@ -347,24 +473,22 @@ function GameApp() {
             doCycle={doCycle}
             onGoToAdminPage={handleGoToAdminPage}
             questionNum={questionNum}
-            desc ={desc}
+            desc={desc}
           />
         );
     }
   };
 
+  // 主渲染：使用新的滑動切換容器
   return (
-    <div
-      className="h-screen w-screen bg-cover bg-center bg-gradient-to-br from-purple-600 via-blue-600 to-emerald-500 font-sans overflow-hidden backdrop-blur"
-      //style={{
-        //backgroundImage: `url(${backgroundImg})`
-        
-      //}}
+    <SlideTransitionContainer
+      isTransitioning={isTransitioning}
+      slideDirection={slideDirection}
+      transitionType={transitionType}
+      backgroundGradient="from-purple-600 via-blue-600 to-emerald-500"
     >
-      
-
-      {renderView()}
-    </div>
+      {renderCurrentPage()}
+    </SlideTransitionContainer>
   );
 }
 
@@ -374,9 +498,6 @@ export default function App() {
     <BrowserRouter basename="/recycle">
       <Routes>
         <Route path="/" element={<GameApp />} />
-        {/* 預設路由 - 管理模式 */}
-
-        {/* 活動路由 - 活動模式 */}
         <Route path="/:eventName" element={<GameApp />} />
         <Route path="/:eventName/:cycle" element={<GameApp />} />
       </Routes>

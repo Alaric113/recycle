@@ -127,7 +127,7 @@ export const StartScreen = ({
       {isEventMode == "admin" && (
         <div className="flex items-center gap-2 mb-4 z-100">
           <select
-            className="p-2 rounded border-gray-300"
+            className="p-2 rounded border-white/20 border rounded-2xl backdrop-blur-md p-2"
             value={eventName} // 綁定 eventName 狀態
             onChange={(e) => setEventNameState(e.target.value)} // 更新 eventName 狀態
           >
@@ -158,7 +158,7 @@ export const StartScreen = ({
       )}
       {isEventMode == "none" && (
         <div
-          className="mb-6 p-4 bg-red-600/70 rounded-lg border-2 border-red-300 z-100"
+          className="mb-6 p-4 bg-red-600/60 rounded-lg border-1 border-white/20 backdrop-blur z-100"
           onClick={handleBadgeClick}
         >
           <p className="text-xl font-bold select-none">沒有此活動</p>

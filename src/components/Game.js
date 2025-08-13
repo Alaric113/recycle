@@ -250,7 +250,7 @@ useEffect(() => {
             {currentItem.options?.map((option, index) => (
               <button
                 key={index}
-                className="bg-white hover:bg-blue-100 border-2 border-blue-300 rounded-lg px-3 py-3 sm:py-4 md:py-5 text-base sm:text-lg md:text-xl transition disabled:opacity-50 shadow-sm font-medium hover:shadow-md transform hover:scale-105 min-h-[60px] sm:min-h-[70px] flex items-center justify-center text-center"
+                className="bg-white hover:bg-blue-100 hover:text-black border-2 border-blue-300 rounded-lg px-3 py-3 sm:py-4 md:py-5 text-base sm:text-lg md:text-xl transition disabled:opacity-50 shadow-sm font-medium hover:shadow-md transform hover:scale-105 min-h-[60px] sm:min-h-[70px] flex items-center justify-center text-center"
                 disabled={feedback.show}
                 onClick={() => handleAnswer(option)}
               >
