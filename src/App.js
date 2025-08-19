@@ -426,6 +426,7 @@ function GameApp() {
             doCycle={doCycle}
             db={db}
             questionNum={questionNum}
+            mode = {mode}
           />
         );
       case "end":

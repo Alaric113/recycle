@@ -16,7 +16,7 @@ function chunk(array, size) {
   );
 }
 
-const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerName: initialPlayerName,db,questionNum}) => {
+const Game = ({ onGameEnd, onGameCancel, allQuizItems,userId, eventName, playerName: initialPlayerName,db,questionNum,mode}) => {
   const [items, setItems] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -170,6 +170,7 @@ useEffect(() => {
           setGender={setGender}
           age={age}
           setAge={setAge}
+          mode = {mode}
         />
       </div>
     );

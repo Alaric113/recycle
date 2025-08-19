@@ -157,7 +157,7 @@ const EventPanel = ({ db, onBackToStart }) => {
       const eventsCollectionRef = collection(db, "events");
       await setDoc(doc(eventsCollectionRef, newEventName.trim()), {
         createdAt: new Date(),
-        description: desc,
+        description: desc || '你好!!',
         questionNUm: numQuestions, // 儲存題目數量
       });
 

@@ -85,6 +85,7 @@ export const StartScreen = ({
     
     setEventName(eventName);
     trashManRef.current?.celebrate('準備開始吧!');
+    console.log(isEventMode)
     setTimeout(() => {
       onStart();
     }, 1000);
