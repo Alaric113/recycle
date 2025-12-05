@@ -44,7 +44,9 @@ export const useEventValidator = (db, eventName, shouldCheck, uid) => {
 export const useGetEventQNUM = (db, eventName) => {
   
   const [questionNum, setQuestionNum] = useState(0);
-  const [desc,setDesc] = useState('')
+  const [desc,setDesc] = useState('');
+  const [isAnonymous, setIsAnonymous] = useState(false); // 新增
+
   useEffect(() => {
     if (!db || !eventName) return;
 
@@ -52,9 +54,10 @@ export const useGetEventQNUM = (db, eventName) => {
       const eventDocRef = doc(db, 'events', eventName);
       const snap = await getDoc(eventDocRef);
       if (snap.exists()) {
-        
-        setQuestionNum(snap.data().questionNum);
-        setDesc(snap.data().description)
+        const data = snap.data();
+        setQuestionNum(data.questionNum);
+        setDesc(data.description);
+        setIsAnonymous(data.isAnonymous || false); // 讀取匿名設定
       }
     };
   
@@ -62,5 +65,5 @@ export const useGetEventQNUM = (db, eventName) => {
     fetchQuestionNum();
   }, [db,eventName,questionNum,desc]);
 
-  return { questionNum,desc };
+  return { questionNum, desc, isAnonymous }; // 回傳 isAnonymous
 }

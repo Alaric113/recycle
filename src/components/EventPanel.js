@@ -19,6 +19,7 @@ const EventPanel = ({ db, onBackToStart }) => {
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [newEventName, setNewEventName] = useState("");
   const [numQuestions, setNumQuestions] = useState(5); // 新增：題目數量狀態
+  const [isAnonymous, setIsAnonymous] = useState(false); // 新增：匿名模式狀態
   const [showDetailedAnalytics, setShowDetailedAnalytics] = useState(false);
   const [analyticsEventName, setAnalyticsEventName] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -28,6 +29,7 @@ const EventPanel = ({ db, onBackToStart }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editEventName, setEditEventName] = useState("");
   const [editNumQuestions, setEditNumQuestions] = useState(5);
+  const [editIsAnonymous, setEditIsAnonymous] = useState(false); // 新增：編輯模式的匿名狀態
   const [editDesc, setEditDesc] = useState("");
   const [desc,setDesc] = useState('')
 
@@ -158,7 +160,8 @@ const EventPanel = ({ db, onBackToStart }) => {
       await setDoc(doc(eventsCollectionRef, newEventName.trim()), {
         createdAt: new Date(),
         description: desc || '你好!!',
-        questionNUm: numQuestions, // 儲存題目數量
+        questionNum: numQuestions, // 儲存題目數量
+        isAnonymous: isAnonymous, // 儲存匿名設定
       });
 
       const eventsSnapshot = await getDocs(eventsCollectionRef);
@@ -166,7 +169,9 @@ const EventPanel = ({ db, onBackToStart }) => {
       setEvents(eventList);
 
       setNewEventName("");
-      setNumQuestions(5); // 重置題目數量
+      setNumQuestions(5); 
+      setIsAnonymous(false); // 重置
+      setDesc('');
       setShowAddEventModal(false);
 
       console.log(`新增活動成功: ${newEventName.trim()}`);
@@ -188,6 +193,7 @@ const EventPanel = ({ db, onBackToStart }) => {
       setEditEventName(name);
       setEditNumQuestions(data.questionNum || 5);
       setEditDesc(data.description || "");
+      setEditIsAnonymous(data.isAnonymous || false); // 載入匿名設定
       setShowEditModal(true);
       console.log(data.description)
     } catch (e) {
@@ -200,6 +206,7 @@ const EventPanel = ({ db, onBackToStart }) => {
       await updateEvent(db, editEventName, {
         questionNum: Number(editNumQuestions),
         description: editDesc,
+        isAnonymous: editIsAnonymous, // 更新匿名設定
       });
       alert("活動已更新！");
       setShowEditModal(false);
@@ -325,6 +332,8 @@ const EventPanel = ({ db, onBackToStart }) => {
           setInputQValue={setNumQuestions}
           desc={desc}
           setDesc={setDesc}
+          isAnonymous={isAnonymous}
+          setIsAnonymous={setIsAnonymous}
           showCancelButton={true}
         />
 
@@ -339,6 +348,8 @@ const EventPanel = ({ db, onBackToStart }) => {
           setInputQValue={setEditNumQuestions}
           desc={editDesc}
           setDesc={setEditDesc}
+          isAnonymous={editIsAnonymous}
+          setIsAnonymous={setEditIsAnonymous}
           showCancelButton
           submitText="儲存"
         />

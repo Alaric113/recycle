@@ -164,7 +164,7 @@ function GameApp() {
   );
   const [detectedEventName, setDetectedEventName] = useState(null);
   const [mode, setMode] = useState("");
-  const { questionNum, desc } = useGetEventQNUM(
+  const { questionNum, desc, isAnonymous } = useGetEventQNUM(
     db,
     eventName,
     reloadQNumTrigger
@@ -427,6 +427,7 @@ function GameApp() {
             db={db}
             questionNum={questionNum}
             mode = {mode}
+            isAnonymous={isAnonymous} // 傳遞匿名模式設定
           />
         );
       case "end":
