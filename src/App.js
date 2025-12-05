@@ -56,41 +56,44 @@ const SlideTransitionContainer = ({
   isTransitioning, 
   slideDirection = SLIDE_DIRECTIONS.RIGHT,
   transitionType = TRANSITION_TYPES.SLIDE,
-  duration = 500,
+  duration = 300, // 縮短動畫時間，感覺更輕快
   className = "",
   backgroundGradient = "from-purple-600 via-blue-600 to-emerald-500"
 }) => {
   
   // 獲取過渡樣式
   const getTransitionStyle = () => {
-    const baseClasses = "absolute inset-0 w-full h-full transition-all ease-in-out";
+    const baseClasses = "absolute inset-0 w-full h-full transition-all ease-in-out transform";
     const durationClass = `duration-${duration}`;
     
+    // 正常狀態 (顯示中)
     if (!isTransitioning) {
-      return `${baseClasses} ${durationClass} transform translate-x-0 translate-y-0 opacity-100 scale-100`;
+      return `${baseClasses} ${durationClass} opacity-100 translate-x-0 translate-y-0 scale-100`;
     }
 
+    // 過渡狀態 (隱藏/移出)
+    // 這裡定義的是「舊頁面離場」的樣式，或者「新頁面進場前」的初始狀態
     switch (transitionType) {
       case TRANSITION_TYPES.SLIDE:
         const slideTransform = {
-          [SLIDE_DIRECTIONS.LEFT]: 'translate-x-full opacity-90',
-          [SLIDE_DIRECTIONS.RIGHT]: '-translate-x-full opacity-90',
-          [SLIDE_DIRECTIONS.UP]: 'translate-y-full opacity-90',
-          [SLIDE_DIRECTIONS.DOWN]: '-translate-y-full opacity-90'
+          [SLIDE_DIRECTIONS.LEFT]: '-translate-x-1/4 opacity-0', // 向左滑出
+          [SLIDE_DIRECTIONS.RIGHT]: 'translate-x-1/4 opacity-0',  // 向右滑出
+          [SLIDE_DIRECTIONS.UP]: '-translate-y-1/4 opacity-0',
+          [SLIDE_DIRECTIONS.DOWN]: 'translate-y-1/4 opacity-0'
         };
-        return `${baseClasses} ${durationClass} transform ${slideTransform[slideDirection]}`;
+        return `${baseClasses} ${durationClass} ${slideTransform[slideDirection] || 'opacity-0'}`;
       
       case TRANSITION_TYPES.FADE:
-        return `${baseClasses} ${durationClass} opacity-0 scale-95`;
+        return `${baseClasses} ${durationClass} opacity-0`;
       
       case TRANSITION_TYPES.SCALE:
-        return `${baseClasses} ${durationClass} opacity-0 scale-75`;
+        return `${baseClasses} ${durationClass} opacity-0 scale-90`; // 輕微縮小
       
       case TRANSITION_TYPES.FLIP:
-        return `${baseClasses} ${durationClass} opacity-0 transform scale-x-0`;
+        return `${baseClasses} ${durationClass} opacity-0 rotate-y-90`;
       
       default:
-        return `${baseClasses} ${durationClass} transform translate-x-0 translate-y-0 opacity-100`;
+        return `${baseClasses} ${durationClass} opacity-0`;
     }
   };
 
@@ -99,7 +102,7 @@ const SlideTransitionContainer = ({
       {/* 背景效果層 */}
       <div className="absolute inset-0 backdrop-blur-sm bg-black/5" />
       
-      {/* 動態背景粒子效果 - 可選，如果覺得太花俏可以移除 */}
+      {/* 動態背景粒子效果 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
         <div className="absolute -top-4 -left-4 w-72 h-72 bg-white rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-float" />
         <div className="absolute -bottom-8 -right-4 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-float-delayed" />
@@ -390,7 +393,7 @@ function GameApp() {
       setCurrentPage(newPage);
       setView(newPage); // 同步更新 view 狀態
       setIsTransitioning(false);
-    }, 500);
+    }, 300); // 配合動畫時間縮短為 300ms
   }, []);
 
   // 渲染當前頁面內容
